@@ -15,7 +15,7 @@
     "url": "https://github.com/gitpod-io/gitpod/issues"
   },
   "engines": {
-    "vscode": "^1.58.2"
+    "vscode": "^1.63.0"
   },
   "categories": [
     "Other"
