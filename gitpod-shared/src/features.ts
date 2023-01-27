@@ -2,8 +2,6 @@
  *  Copyright (c) Gitpod. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-// TODO get rid of loading inversify and reflect-metadata
-require('reflect-metadata');
 import { GitpodClient, GitpodServer, GitpodServiceImpl } from '@gitpod/gitpod-protocol/lib/gitpod-service';
 import { JsonRpcProxyFactory } from '@gitpod/gitpod-protocol/lib/messaging/proxy-factory';
 import { NavigatorContext } from '@gitpod/gitpod-protocol/lib/protocol';

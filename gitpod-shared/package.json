@@ -23,7 +23,6 @@
     "@types/vscode-webview": "^1.57.0",
     "@types/ws": "^7.2.6",
     "mocha": "^10.0.0",
-    "reflect-metadata": "^0.1.13",
     "svelte": "^3.0.0",
     "svelte-check": "^2.0.0",
     "svelte-preprocess": "^4.0.0",
@@ -40,7 +39,7 @@
     "utf-8-validate": "^5.0.2",
     "uuid": "^8.3.1",
     "vscode-nls": "^5.0.0",
-    "vscode-ws-jsonrpc": "0.2.0",
+    "vscode-ws-jsonrpc": "^0.2.0",
     "ws": "^7.4.6",
     "yaml": "^1.10.0"
   }

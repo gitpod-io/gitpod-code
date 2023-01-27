@@ -14,6 +14,7 @@ function yarnInstall(location, opts) {
 	const raw = process.env['npm_config_argv'] || '{}';
 	const argv = JSON.parse(raw);
 	const original = argv.original || [];
+	const args = original.filter(arg => arg === '--ignore-optional' || arg === '--frozen-lockfile' || arg === '--check-files');
 	if (opts.ignoreEngines) {
 		args.push('--ignore-engines');
 		delete opts.ignoreEngines;
@@ -34,4 +35,3 @@ for (let dir of extensionDirectories) {
     dir = dir.replace("package.json", "");
     yarnInstall(dir, { ignoreEngines: true });
 }
-

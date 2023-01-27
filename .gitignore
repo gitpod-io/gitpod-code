@@ -3,7 +3,4 @@
 npm-debug.log
 Thumbs.db
 node_modules/
-/**/dist/
-/**/out/
 yarn-error.log
-tsconfig.tsbuildinfo
