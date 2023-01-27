@@ -428,6 +428,7 @@
     "@rollup/plugin-typescript": "^8.0.0",
     "@tsconfig/svelte": "^2.0.0",
     "@types/node": "16.x",
+    "@types/vscode": "^1.63.0",
     "@types/vscode-webview": "^1.57.0",
     "rollup": "^2.3.4",
     "rollup-plugin-copy": "^3.4.0",
@@ -438,10 +439,11 @@
     "sirv-cli": "^2.0.0",
     "svelte": "^3.0.0",
     "svelte-check": "^2.0.0",
-    "svelte-preprocess": "^4.0.0"
+    "svelte-preprocess": "^4.0.0",
+    "typescript": "^4.6.3"
   },
   "dependencies": {
-    "gitpod-shared": "0.0.1",
+    "gitpod-shared": "link:./../gitpod-shared",
     "jsonc-parser": "^3.2.0",
     "vscode-nls": "^5.0.0"
   }

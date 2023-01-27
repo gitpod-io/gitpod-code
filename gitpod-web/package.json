@@ -505,7 +505,7 @@
           "when": "gitpod.inWorkspace == true && gitpod.UIKind == 'web'"
         }
       ],
-      "editor/context":[
+      "editor/context": [
         {
           "command": "gitpod.gitpodyml.editorContext.build",
           "when": "gitpod.run-gp.enabled && resourceFilename == '.gitpod.yml' && resourceScheme == file",
@@ -527,7 +527,7 @@
           "group": "0_navigation@0"
         }
       ],
-      "editor/title":[
+      "editor/title": [
         {
           "command": "gitpod.gitpodyml.editorTitle.build",
           "when": "gitpod.run-gp.enabled && resourceFilename == '.gitpod.yml' && resourceScheme == file",
@@ -661,10 +661,14 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "yarn build:webview; yarn run compile --cwd ..",
+    "postinstall": "yarn update-dts",
+    "vscode:prepublish": "yarn build:webview; yarn run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
     "build:webview": "rollup -c",
     "watch:webview": "rollup -c -w",
-    "start:webview": "sirv public --no-clear"
+    "start:webview": "sirv public --no-clear",
+    "update-dts": "npx vscode-dts dev"
   },
   "devDependencies": {
     "@types/node": "16.x",
@@ -672,7 +676,10 @@
     "@types/uuid": "8.0.0",
     "@types/yauzl": "^2.9.1",
     "@types/yazl": "^2.4.2",
+    "@types/js-yaml": "^4.0.5",
+    "@types/semver": "^7.3.13",
     "@tsconfig/svelte": "^2.0.0",
+    "@types/vscode": "^1.63.0",
     "@types/vscode-webview": "^1.57.0",
     "svelte": "^3.0.0",
     "svelte-check": "^2.0.0",
@@ -688,15 +695,19 @@
     "@rollup/plugin-typescript": "^8.0.0",
     "@rollup/plugin-alias": "^3.1.9",
     "svelte-preprocess": "^4.0.0",
-    "sirv-cli": "^2.0.0"
+    "sirv-cli": "^2.0.0",
+    "typescript": "^4.6.3"
   },
   "dependencies": {
     "configcat-node": "^8.0.0",
-    "gitpod-shared": "0.0.1",
+    "gitpod-shared": "link:./../gitpod-shared",
     "node-fetch": "2.6.7",
     "uuid": "8.1.0",
     "vscode-nls": "^5.0.0",
     "yauzl": "^2.9.2",
-    "yazl": "^2.5.1"
+    "yazl": "^2.5.1",
+    "keytar": "7.9.0",
+    "semver": "^7.3.8",
+    "js-yaml": "^4.1.0"
   }
 }

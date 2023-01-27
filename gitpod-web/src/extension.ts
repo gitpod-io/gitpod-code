@@ -2,10 +2,6 @@
  *  Copyright (c) Gitpod. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-/// <reference path='../../../src/vscode-dts/vscode.d.ts'/>
-/// <reference path='../../../src/vscode-dts/vscode.proposed.resolvers.d.ts'/>
-/// <reference path='../../../src/vscode-dts/vscode.proposed.tunnels.d.ts'/>
-
 import * as grpc from '@grpc/grpc-js';
 import { GitpodExtensionContext, setupGitpodContext, registerTasks, registerIpcHookCli, ExposedServedGitpodWorkspacePort, GitpodWorkspacePort, isExposedServedGitpodWorkspacePort, isGRPCErrorStatus } from 'gitpod-shared';
 import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';

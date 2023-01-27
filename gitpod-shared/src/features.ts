@@ -1,7 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Gitpod. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
-/// <reference path='../../../src/vscode-dts/vscode.d.ts'/>
 
 // TODO get rid of loading inversify and reflect-metadata
 require('reflect-metadata');

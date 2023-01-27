@@ -2,8 +2,6 @@
  *  Copyright (c) Gitpod. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-/// <reference path='../../../src/vscode-dts/vscode.d.ts'/>
-
 import { GitpodExtensionContext, registerTasks, setupGitpodContext, registerIpcHookCli } from 'gitpod-shared';
 import * as path from 'path';
 import * as vscode from 'vscode';
