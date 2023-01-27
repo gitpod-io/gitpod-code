@@ -14,14 +14,14 @@
     "watch": "tsc -b -w"
   },
   "devDependencies": {
-    "@types/mocha": "^9.1.1",
+    "@tsconfig/svelte": "^2.0.0",
     "@types/js-yaml": "^4.0.5",
+    "@types/mocha": "^9.1.1",
     "@types/node": "16.x",
     "@types/uuid": "^8.3.1",
-    "@types/ws": "^7.2.6",
-    "@tsconfig/svelte": "^2.0.0",
-    "@types/vscode-webview": "^1.57.0",
     "@types/vscode": "^1.63.0",
+    "@types/vscode-webview": "^1.57.0",
+    "@types/ws": "^7.2.6",
     "mocha": "^10.0.0",
     "svelte": "^3.0.0",
     "svelte-check": "^2.0.0",
@@ -31,15 +31,16 @@
   "dependencies": {
     "@gitpod/gitpod-protocol": "main",
     "@gitpod/supervisor-api-grpc": "ak-rebuild-debug",
+    "@vscode/codicons": "^0.0.31",
+    "@vscode/webview-ui-toolkit": "^1.0.0",
     "bufferutil": "^4.0.1",
     "js-yaml": "^4.1.0",
     "reconnecting-websocket": "^4.4.0",
     "utf-8-validate": "^5.0.2",
     "uuid": "^8.3.1",
     "vscode-nls": "^5.0.0",
+    "vscode-ws-jsonrpc": "0.2.0",
     "ws": "^7.4.6",
-    "yaml": "^1.10.0",
-    "@vscode/codicons": "^0.0.31",
-    "@vscode/webview-ui-toolkit": "^1.0.0"
+    "yaml": "^1.10.0"
   }
 }
