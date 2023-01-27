@@ -12,7 +12,7 @@
     "watch": "npm-run-all -lp watch:ts watch:gitpod-web",
     "build:ts": "./node_modules/.bin/tsc -b",
     "watch:ts": "./node_modules/.bin/tsc -b -w",
-    "build:gitpod-web": "yarn --cwd gitpod-web build:webview",
+    "build:gitpod-web": "yarn --cwd gitpod-web vscode:prepublish",
     "watch:gitpod-web": "yarn --cwd gitpod-web watch:webview",
     "build:gitpod-remote": "yarn --cwd gitpod-remote vscode:prepublish",
     "watch:gitpod-remote": "yarn --cwd gitpod-remote watch"
