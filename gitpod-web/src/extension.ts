@@ -2,15 +2,11 @@
  *  Copyright (c) Gitpod. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import * as grpc from '@grpc/grpc-js';
-import { GitpodExtensionContext, setupGitpodContext, registerTasks, registerIpcHookCli, ExposedServedGitpodWorkspacePort, GitpodWorkspacePort, isExposedServedGitpodWorkspacePort, isGRPCErrorStatus } from 'gitpod-shared';
-import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';
-import { PortsStatus, PortsStatusRequest, PortsStatusResponse, PortVisibility } from '@gitpod/supervisor-api-grpc/lib/status_pb';
-import { TunnelVisiblity, TunnelPortRequest, RetryAutoExposeRequest, CloseTunnelRequest } from '@gitpod/supervisor-api-grpc/lib/port_pb';
-import { ExposePortRequest } from '@gitpod/supervisor-api-grpc/lib/control_pb';
+import { GitpodExtensionContext, setupGitpodContext, registerTasks, registerIpcHookCli, ExposedServedGitpodWorkspacePort, GitpodWorkspacePort, isExposedServedGitpodWorkspacePort } from 'gitpod-shared';
+import { PortsStatus, PortVisibility } from '@gitpod/supervisor-api-grpc/lib/status_pb';
+import { TunnelVisiblity} from '@gitpod/supervisor-api-grpc/lib/port_pb';
 import type * as keytarType from 'keytar';
 import fetch from 'node-fetch';
-import * as util from 'util';
 import * as vscode from 'vscode';
 import { ReleaseNotes } from './releaseNotes';
 import { registerWelcomeWalkthroughContribution, WELCOME_WALKTROUGH_KEY } from './welcomeWalktrough';
@@ -118,25 +114,17 @@ function registerAuth(context: GitpodExtensionContext): void {
 					}
 				}
 			} else {
-				const getTokenRequest = new GetTokenRequest();
-				getTokenRequest.setKind('gitpod');
-				getTokenRequest.setHost(context.info.getGitpodApi()!.getHost());
-				const scopes = [
-					'function:accessCodeSyncStorage'
-				];
-				for (const scope of scopes) {
-					getTokenRequest.addScope(scope);
-				}
-				const getTokenResponse = await util.promisify(context.supervisor.token.getToken.bind(context.supervisor.token, getTokenRequest, context.supervisor.metadata, {
-					deadline: Date.now() + context.supervisor.deadlines.long
-				}))();
-				const accessToken = getTokenResponse.getToken();
+				const resp = await context.supervisor.getToken(
+					'gitpod',
+					context.info.gitpodApi!.host,
+					['function:accessCodeSyncStorage']
+				);
 				const session = await resolveAuthenticationSession({
 					// current session ID should remain stable between window reloads
 					// otherwise setting sync will log out
 					id: 'gitpod-current-session',
-					accessToken,
-					scopes
+					accessToken: resp.token,
+					scopes: resp.scopeList
 				}, resolveGitpodUser);
 				sessions.push(session);
 				onDidChangeSessionsEmitter.fire({ added: [session], changed: [], removed: [] });
@@ -186,30 +174,23 @@ function registerAuth(context: GitpodExtensionContext): void {
 			};
 		}
 
-		async function loginGitHub(scopes?: readonly string[]): Promise<vscode.AuthenticationSession> {
-			const getTokenRequest = new GetTokenRequest();
-			getTokenRequest.setKind('git');
-			getTokenRequest.setHost('github.com');
-			if (scopes) {
-				for (const scope of scopes) {
-					getTokenRequest.addScope(scope);
-				}
-			}
-			const getTokenResponse = await util.promisify(context.supervisor.token.getToken.bind(context.supervisor.token, getTokenRequest, context.supervisor.metadata, {
-				deadline: Date.now() + context.supervisor.deadlines.long
-			}))();
-			const accessToken = getTokenResponse.getToken();
+		async function loginGitHub(scopes: string[]): Promise<vscode.AuthenticationSession> {
+			const resp = await context.supervisor.getToken(
+				'git',
+				'github.com',
+				scopes
+			);
 			gitHubSession = await resolveAuthenticationSession({
 				id: gitHubSessionID,
-				accessToken,
-				scopes: getTokenResponse.getScopeList()
+				accessToken: resp.token,
+				scopes: resp.scopeList
 			}, resolveGitHubUser);
 			onDidChangeGitHubSessionsEmitter.fire({ added: [gitHubSession], changed: [], removed: [] });
 			return gitHubSession;
 		}
 
 		try {
-			await loginGitHub();
+			await loginGitHub([]);
 		} catch (e) {
 			console.error('Failed an initial GitHub login:', e);
 		}
@@ -225,7 +206,7 @@ function registerAuth(context: GitpodExtensionContext): void {
 			},
 			createSession: async scopes => {
 				try {
-					const session = await loginGitHub(scopes);
+					const session = await loginGitHub(scopes.slice());
 					return session;
 				} catch (e) {
 					console.error('GitHub sign in failed: ', e);
@@ -248,7 +229,7 @@ interface PortItem { port: GitpodWorkspacePort }
 async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 
 	const packageJSON = context.extension.packageJSON;
-	const experiments = new ExperimentalSettings('gitpod', packageJSON.version, context.logger, context.info.getGitpodHost());
+	const experiments = new ExperimentalSettings('gitpod', packageJSON.version, context.logger, context.info.gitpodHost);
 	context.subscriptions.push(experiments);
 
 	const portMap = new Map<number, GitpodWorkspacePort>();
@@ -262,49 +243,15 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 		return vscode.env.openExternal(vscode.Uri.parse(port.localUrl));
 	}
 
-	function observePortsStatus(): vscode.Disposable {
-		let run = true;
-		let stopUpdates: Function | undefined;
-		(async () => {
-			while (run) {
-				try {
-					const req = new PortsStatusRequest();
-					req.setObserve(true);
-					const evts = context.supervisor.status.portsStatus(req, context.supervisor.metadata);
-					stopUpdates = evts.cancel.bind(evts);
+	context.subscriptions.push(context.supervisor.onDidChangePortStatus((portList) => {
+		portMap.clear();
+		for (const portStatus of portList) {
+			portMap.set(portStatus.localPort, new GitpodWorkspacePort(portStatus.localPort, portStatus, tunnelMap.get(portStatus.localPort)));
+		}
+		portViewProvider.updatePortsStatus(portList);
+	}));
+	context.supervisor.startObservePortsStatus();
 
-					await new Promise((resolve, reject) => {
-						evts.on('end', resolve);
-						evts.on('error', reject);
-						evts.on('data', (update: PortsStatusResponse) => {
-							portMap.clear();
-							const portList = update.getPortsList().map(p => p.toObject());
-							for (const portStatus of portList) {
-								portMap.set(portStatus.localPort, new GitpodWorkspacePort(portStatus.localPort, portStatus, tunnelMap.get(portStatus.localPort)));
-							}
-							portViewProvider.updatePortsStatus(portList);
-						});
-					});
-				} catch (err) {
-					if (!isGRPCErrorStatus(err, grpc.status.CANCELLED)) {
-						context.logger.error('cannot maintain connection to supervisor', err);
-						console.error('cannot maintain connection to supervisor', err);
-					}
-				} finally {
-					stopUpdates = undefined;
-				}
-				await new Promise(resolve => setTimeout(resolve, 1000));
-			}
-		})();
-		return new vscode.Disposable(() => {
-			run = false;
-			if (stopUpdates) {
-				stopUpdates();
-			}
-		});
-	}
-
-	context.subscriptions.push(observePortsStatus());
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.resolveExternalPort', (portNumber: number) => {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise<string>(async (resolve, reject) => {
@@ -324,11 +271,7 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 							listenerWebview?.dispose();
 						}
 					});
-					const request = new ExposePortRequest();
-					request.setPort(portNumber);
-					await util.promisify(context.supervisor.control.exposePort.bind(context.supervisor.control, request, context.supervisor.metadata, {
-						deadline: Date.now() + context.supervisor.deadlines.normal
-					}))();
+					await context.supervisor.exposePort(portNumber);
 				}
 			} catch (e) {
 				reject(e);
@@ -350,10 +293,10 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 		gitpodContext?.setPortVisibility(port.status.localPort, 'public');
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.tunnelNetwork', ({ port }: PortItem) => {
-		gitpodContext?.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.NETWORK);
+		gitpodContext?.supervisor.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.NETWORK);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.tunnelHost', async ({ port }: PortItem) =>
-		gitpodContext?.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.HOST)
+		gitpodContext?.supervisor.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.HOST)
 	));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.preview', ({ port }: PortItem) => {
 		context.fireAnalyticsEvent({
@@ -369,12 +312,8 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 		});
 		return openExternal(port);
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.retryAutoExpose', async ({ port }: PortItem) => {
-		const request = new RetryAutoExposeRequest();
-		request.setPort(port.portNumber);
-		await util.promisify(context.supervisor.port.retryAutoExpose.bind(context.supervisor.port, request, context.supervisor.metadata, {
-			deadline: Date.now() + context.supervisor.deadlines.normal
-		}))();
+	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.retryAutoExpose', ({ port }: PortItem) => {
+		context.supervisor.retryAutoExposePort(port.portNumber);
 	}));
 
 	const portsStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
@@ -489,21 +428,15 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.vscode.workspace.openTunnel', (tunnelOptions: vscode.TunnelOptions) => {
 		return vscode.workspace.openTunnel(tunnelOptions);
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.api.openTunnel', async (tunnelOptions: vscode.TunnelOptions, _tunnelCreationOptions: vscode.TunnelCreationOptions) => {
-		const request = new TunnelPortRequest();
-		request.setPort(tunnelOptions.remoteAddress.port);
-		request.setTargetPort(tunnelOptions.localAddressPort || tunnelOptions.remoteAddress.port);
-		request.setVisibility(tunnelOptions.privacy === 'public' ? TunnelVisiblity.NETWORK : TunnelVisiblity.HOST);
-		await util.promisify(context.supervisor.port.tunnel.bind(context.supervisor.port, request, context.supervisor.metadata, {
-			deadline: Date.now() + context.supervisor.deadlines.normal
-		}))();
+	context.subscriptions.push(vscode.commands.registerCommand('gitpod.api.openTunnel', (tunnelOptions: vscode.TunnelOptions, _tunnelCreationOptions: vscode.TunnelCreationOptions) => {
+		context.supervisor.openTunnel(
+			tunnelOptions.remoteAddress.port,
+			tunnelOptions.localAddressPort || tunnelOptions.remoteAddress.port,
+			tunnelOptions.privacy
+		);
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.api.closeTunnel', async (port: number) => {
-		const request = new CloseTunnelRequest();
-		request.setPort(port);
-		await util.promisify(context.supervisor.port.closeTunnel.bind(context.supervisor.port, request, context.supervisor.metadata, {
-			deadline: Date.now() + context.supervisor.deadlines.normal
-		}))();
+	context.subscriptions.push(vscode.commands.registerCommand('gitpod.api.closeTunnel', (port: number) => {
+		context.supervisor.closeTunnel(port);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.dev.enableForwardedPortsView', () =>
 		vscode.commands.executeCommand('setContext', 'forwardedPortsViewEnabled', true)

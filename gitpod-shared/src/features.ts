@@ -7,11 +7,10 @@ import { JsonRpcProxyFactory } from '@gitpod/gitpod-protocol/lib/messaging/proxy
 import { NavigatorContext } from '@gitpod/gitpod-protocol/lib/protocol';
 import { ErrorCodes } from '@gitpod/gitpod-protocol/lib/messaging/error';
 import { GitpodHostUrl } from '@gitpod/gitpod-protocol/lib/util/gitpod-host-url';
-import { WorkspaceInfoRequest, DebugWorkspaceType } from '@gitpod/supervisor-api-grpc/lib/info_pb';
+import { DebugWorkspaceType } from '@gitpod/supervisor-api-grpc/lib/info_pb';
 import { NotifyRequest, NotifyResponse, RespondRequest, SubscribeRequest, SubscribeResponse } from '@gitpod/supervisor-api-grpc/lib/notification_pb';
 import { TasksStatusRequest, TasksStatusResponse, TaskState, TaskStatus } from '@gitpod/supervisor-api-grpc/lib/status_pb';
 import { ListenTerminalRequest, ListenTerminalResponse, ListTerminalsRequest, SetTerminalSizeRequest, ShutdownTerminalRequest, Terminal as SupervisorTerminal, TerminalSize as SupervisorTerminalSize, WriteTerminalRequest } from '@gitpod/supervisor-api-grpc/lib/terminal_pb';
-import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';
 import * as grpc from '@grpc/grpc-js';
 import * as fs from 'fs';
 import * as http from 'http';
@@ -30,15 +29,13 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 	const logger = new Log('Gitpod Workspace');
 	const devMode = context.extensionMode === vscode.ExtensionMode.Development || !!process.env['VSCODE_DEV'];
 
-	const supervisor = new SupervisorConnection(context);
+	const supervisor = new SupervisorConnection(context, logger);
 
-	const workspaceInfo = await util.promisify(supervisor.info.workspaceInfo.bind(supervisor.info, new WorkspaceInfoRequest(), supervisor.metadata, {
-		deadline: Date.now() + supervisor.deadlines.long
-	}))();
+	const workspaceInfo = await supervisor.getWorkspaceInfo();
 
-	const workspaceId = workspaceInfo.getWorkspaceId();
-	const gitpodHost = workspaceInfo.getGitpodHost();
-	const gitpodApi = workspaceInfo.getGitpodApi()!;
+	const workspaceId = workspaceInfo.workspaceId;
+	const gitpodHost = workspaceInfo.gitpodHost;
+	const gitpodApi = workspaceInfo.gitpodApi!;
 
 	const factory = new JsonRpcProxyFactory<GitpodServer>();
 	const gitpodService: GitpodConnection = new GitpodServiceImpl<GitpodClient, GitpodServer>(factory.createProxy()) as any;
@@ -51,16 +48,8 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 		gitpodScopes.add('function:' + gitpodFunction);
 	}
 	const pendingServerToken = (async () => {
-		const getTokenRequest = new GetTokenRequest();
-		getTokenRequest.setKind('gitpod');
-		getTokenRequest.setHost(gitpodApi.getHost());
-		for (const scope of gitpodScopes) {
-			getTokenRequest.addScope(scope);
-		}
-		const getTokenResponse = await util.promisify(supervisor.token.getToken.bind(supervisor.token, getTokenRequest, supervisor.metadata, {
-			deadline: Date.now() + supervisor.deadlines.long
-		}))();
-		return getTokenResponse.getToken();
+		const resp = await supervisor.getToken('gitpod', gitpodApi.host, [...gitpodScopes]);
+		return resp.token;
 	})();
 	const pendingWillCloseSocket: (() => Promise<void>)[] = [];
 	const pendignWebSocket = (async () => {
@@ -76,7 +65,7 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 				});
 			}
 		}
-		const webSocket = new ReconnectingWebSocket(gitpodApi.getEndpoint(), undefined, {
+		const webSocket = new ReconnectingWebSocket(gitpodApi.endpoint, undefined, {
 			maxReconnectionDelay: 10000,
 			minReconnectionDelay: 1000,
 			reconnectionDelayGrowFactor: 1.3,
@@ -134,7 +123,7 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 
 export async function registerWorkspaceCommands(context: GitpodExtensionContext): Promise<void> {
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.dashboard', () => {
-		const url = context.info.getGitpodHost();
+		const url = context.info.gitpodHost;
 		context.fireAnalyticsEvent({
 			eventName: 'vscode_execute_command_gitpod_open_link',
 			properties: { url }
@@ -142,7 +131,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 		return vscode.env.openExternal(vscode.Uri.parse(url));
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.accessControl', () => {
-		const url = new GitpodHostUrl(context.info.getGitpodHost()).asAccessControl().toString();
+		const url = new GitpodHostUrl(context.info.gitpodHost).asAccessControl().toString();
 		context.fireAnalyticsEvent({
 			eventName: 'vscode_execute_command_gitpod_open_link',
 			properties: { url }
@@ -150,7 +139,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 		return vscode.env.openExternal(vscode.Uri.parse(url));
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.settings', () => {
-		const url = new GitpodHostUrl(context.info.getGitpodHost()).asSettings().toString();
+		const url = new GitpodHostUrl(context.info.gitpodHost).asSettings().toString();
 		context.fireAnalyticsEvent({
 			eventName: 'vscode_execute_command_gitpod_open_link',
 			properties: { url }
@@ -204,12 +193,12 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 			vscode.env.openExternal(vscode.Uri.from({
 				scheme,
 				authority: 'gitpod.gitpod-desktop',
-				path: uri?.path || context.info.getWorkspaceLocationFile() || context.info.getWorkspaceLocationFolder() || context.info.getCheckoutLocation(),
+				path: uri?.path || context.info.workspaceLocationFile || context.info.workspaceLocationFolder || context.info.checkoutLocation,
 				query: JSON.stringify({
-					instanceId: context.info.getInstanceId(),
-					workspaceId: context.info.getWorkspaceId(),
-					gitpodHost: context.info.getGitpodHost(),
-					debugWorkspace: context.info.getDebugWorkspaceType() > DebugWorkspaceType.NODEBUG
+					instanceId: context.info.instanceId,
+					workspaceId: context.info.workspaceId,
+					gitpodHost: context.info.gitpodHost,
+					debugWorkspace: context.info.debugWorkspaceType > DebugWorkspaceType.NODEBUG
 				})
 			}));
 		}
@@ -230,7 +219,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	}
 	if (vscode.env.uiKind === vscode.UIKind.Desktop) {
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInBrowser', () => {
-			const url = context.info.getWorkspaceUrl();
+			const url = context.info.workspaceUrl;
 			context.fireAnalyticsEvent({
 				eventName: 'vscode_execute_command_gitpod_change_vscode_type',
 				properties: { targetUiKind: 'web' }
@@ -248,10 +237,10 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 			eventName: 'vscode_execute_command_gitpod_workspace',
 			properties: { action: 'stop' }
 		});
-		return context.gitpod.server.stopWorkspace(context.info.getWorkspaceId());
+		return context.gitpod.server.stopWorkspace(context.info.workspaceId);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.upgradeSubscription', () => {
-		const url = new GitpodHostUrl(context.info.getGitpodHost()).asUpgradeSubscription().toString();
+		const url = new GitpodHostUrl(context.info.gitpodHost).asUpgradeSubscription().toString();
 		context.fireAnalyticsEvent({
 			eventName: 'vscode_execute_command_gitpod_open_link',
 			properties: { url }
@@ -270,7 +259,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 				cancellable: true,
 				title: 'Capturing workspace snapshot'
 			}, async (_, cancelToken: CancellationToken) => {
-				snapshotId = await context.gitpod.server.takeSnapshot({ workspaceId: context.info.getWorkspaceId() /*, layoutData?*/, dontWait: true });
+				snapshotId = await context.gitpod.server.takeSnapshot({ workspaceId: context.info.workspaceId, dontWait: true });
 
 				while (!cancelToken.isCancellationRequested) {
 					try {
@@ -291,7 +280,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 				throw new Error('error taking snapshot');
 			}
 
-			const hostname = context.info.getGitpodApi()!.getHost();
+			const hostname = context.info.gitpodApi!.host;
 			const uri = `https://${hostname}#snapshot/${snapshotId}`;
 			const copyAction = await vscode.window.showInformationMessage(`The current state is captured in a snapshot. Using [this link](${uri}) anybody can create their own copy of this workspace.`,
 				'Copy URL to Clipboard');
@@ -347,11 +336,11 @@ export async function registerWorkspaceSharing(context: GitpodExtensionContext):
 				cancellable: true,
 				title: level === 'everyone' ? 'Sharing workspace...' : 'Stopping workspace sharing...'
 			}, _ => {
-				return context.gitpod.server.controlAdmission(context.info.getWorkspaceId(), level);
+				return context.gitpod.server.controlAdmission(context.info.workspaceId, level);
 			});
 			setWorkspaceShared(level === 'everyone');
 			if (level === 'everyone') {
-				const uri = context.info.getWorkspaceUrl();
+				const uri = context.info.workspaceUrl;
 				const copyToClipboard = 'Copy URL to Clipboard';
 				const res = await vscode.window.showInformationMessage(`Your workspace is currently shared. Anyone with [the link](${uri}) can access this workspace.`, copyToClipboard);
 				if (res === copyToClipboard) {
@@ -399,7 +388,7 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 			}
 		});
 		try {
-			const result = await context.gitpod.server.setWorkspaceTimeout(context.info.getWorkspaceId(), '180m');
+			const result = await context.gitpod.server.setWorkspaceTimeout(context.info.workspaceId, '180m');
 			if (result.resetTimeoutOnWorkspaces?.length > 0) {
 				vscode.window.showWarningMessage('Workspace timeout has been extended to three hours. This reset the workspace timeout for other workspaces.');
 			} else {
@@ -410,7 +399,7 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 		}
 	}));
 
-	const workspaceTimeout = await context.gitpod.server.getWorkspaceTimeout(context.info.getWorkspaceId());
+	const workspaceTimeout = await context.gitpod.server.getWorkspaceTimeout(context.info.workspaceId);
 	if (!workspaceTimeout.canChange) {
 		return;
 	}
@@ -472,7 +461,7 @@ export function registerNotifications(context: GitpodExtensionContext): void {
 								respondRequest.setResponse(notifyResponse);
 								respondRequest.setRequestid(result.getRequestid());
 								context.supervisor.notification.respond(respondRequest, context.supervisor.metadata, {
-									deadline: Date.now() + context.supervisor.deadlines.normal
+									deadline: Date.now() + SupervisorConnection.deadlines.normal
 								}, (error, _) => {
 									if (error?.code !== grpc.status.DEADLINE_EXCEEDED) {
 										reject(error);
@@ -515,7 +504,7 @@ export function registerDefaultLayout(context: GitpodExtensionContext): void {
 			const workspaceContext = listener.info.workspace.context;
 
 			if (NavigatorContext.is(workspaceContext)) {
-				const location = vscode.Uri.file(path.join(context.info.getCheckoutLocation(), workspaceContext.path));
+				const location = vscode.Uri.file(path.join(context.info.checkoutLocation, workspaceContext.path));
 				if (workspaceContext.isFile) {
 					vscode.window.showTextDocument(location);
 				} else {
@@ -641,7 +630,7 @@ export async function registerTasks(context: GitpodExtensionContext): Promise<vo
 	const taskTerminals = new Map<string, SupervisorTerminal>();
 	try {
 		const response = await util.promisify(context.supervisor.terminal.list.bind(context.supervisor.terminal, new ListTerminalsRequest(), context.supervisor.metadata, {
-			deadline: Date.now() + context.supervisor.deadlines.long
+			deadline: Date.now() + SupervisorConnection.deadlines.long
 		}))();
 		for (const term of response.getTerminalsList()) {
 			taskTerminals.set(term.getAlias(), term);
@@ -772,7 +761,7 @@ function createTaskPty(alias: string, context: GitpodExtensionContext, contextTo
 					const request = new ShutdownTerminalRequest();
 					request.setAlias(alias);
 					await util.promisify(context.supervisor.terminal.shutdown.bind(context.supervisor.terminal, request, context.supervisor.metadata, {
-						deadline: Date.now() + context.supervisor.deadlines.short
+						deadline: Date.now() + SupervisorConnection.deadlines.short
 					}))();
 					context.logger.trace(`${alias} terminal closed`);
 				} catch (e) {
@@ -799,7 +788,7 @@ function createTaskPty(alias: string, context: GitpodExtensionContext, contextTo
 					request.setAlias(alias);
 					request.setStdin(Buffer.from(data, 'utf8'));
 					await util.promisify(context.supervisor.terminal.write.bind(context.supervisor.terminal, request, context.supervisor.metadata, {
-						deadline: Date.now() + context.supervisor.deadlines.short
+						deadline: Date.now() + SupervisorConnection.deadlines.short
 					}))();
 				} catch (e) {
 					if (e && e.code !== grpc.status.NOT_FOUND) {
@@ -827,7 +816,7 @@ function createTaskPty(alias: string, context: GitpodExtensionContext, contextTo
 					request.setSize(size);
 					request.setForce(true);
 					await util.promisify(context.supervisor.terminal.setSize.bind(context.supervisor.terminal, request, context.supervisor.metadata, {
-						deadline: Date.now() + context.supervisor.deadlines.short
+						deadline: Date.now() + SupervisorConnection.deadlines.short
 					}))();
 				} catch (e) {
 					if (e && e.code !== grpc.status.NOT_FOUND) {
@@ -865,7 +854,7 @@ async function updateIpcHookCli(context: GitpodExtensionContext): Promise<void> 
 		await new Promise<void>((resolve, reject) => {
 			const req = http.request({
 				hostname: 'localhost',
-				port: context.devMode ? 9888 /* From code-web.js */ : context.info.getIdePort(),
+				port: context.devMode ? 9888 /* From code-web.js */ : context.info.idePort,
 				protocol: 'http:',
 				path: `/cli/ipcHookCli/${encodeURIComponent(context.ipcHookCli!)}`,
 				method: vscode.window.state.focused ? 'PUT' : 'DELETE'

@@ -18,16 +18,27 @@ import { InfoServiceClient } from '@gitpod/supervisor-api-grpc/lib/info_grpc_pb'
 import { BaseGitpodAnalyticsEventPropeties, GitpodAnalyticsEvent } from './analytics';
 import * as uuid from 'uuid';
 import { RemoteTrackMessage } from '@gitpod/gitpod-protocol/lib/analytics';
-import { TunnelPortRequest, TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
-import { WorkspaceInfoResponse } from '@gitpod/supervisor-api-grpc/lib/info_pb';
+import { CloseTunnelRequest, RetryAutoExposeRequest, TunnelPortRequest, TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
+import { DebugWorkspaceType, WorkspaceInfoRequest, WorkspaceInfoResponse } from '@gitpod/supervisor-api-grpc/lib/info_pb';
 import { User } from '@gitpod/gitpod-protocol/lib/protocol';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import Log from './common/logger';
 import { GitpodYml } from './gitpodYaml';
 import * as path from 'path';
+import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';
+import { PortsStatusRequest, PortsStatusResponse, PortsStatus } from '@gitpod/supervisor-api-grpc/lib/status_pb';
+import { isGRPCErrorStatus } from './common/utils';
+import { ExposePortRequest } from '@gitpod/supervisor-api-grpc/lib/control_pb';
 
+// Important:
+// This class should performs all supervisor API calls used outside this module.
+// This is a requirement because mixing Request Objects created in gitpod-web or gitpod-remote with
+// the corresponding service client will cause a runtime error as type checking is done with the
+// `instanceof` operator and they are different modules loaded from different locations
+// E.g.: `Request message serialization failure: Expected argument of type supervisor.PortsStatusRequest`
+// https://penx.medium.com/managing-dependencies-in-a-node-package-so-that-they-are-compatible-with-npm-link-61befa5aaca7
 export class SupervisorConnection {
-	readonly deadlines = {
+	static readonly deadlines = {
 		long: 30 * 1000,
 		normal: 15 * 1000,
 		short: 5 * 1000
@@ -36,15 +47,19 @@ export class SupervisorConnection {
 	private readonly clientOptions: Partial<grpc.ClientOptions>;
 	readonly metadata = new grpc.Metadata();
 	readonly status: StatusServiceClient;
-	readonly control: ControlServiceClient;
+	private readonly control: ControlServiceClient;
 	readonly notification: NotificationServiceClient;
-	readonly token: TokenServiceClient;
-	readonly info: InfoServiceClient;
-	readonly port: PortServiceClient;
+	private readonly token: TokenServiceClient;
+	private readonly info: InfoServiceClient;
+	private readonly port: PortServiceClient;
 	readonly terminal: TerminalServiceClient;
 
+	private _onDidChangePortStatus = new vscode.EventEmitter<PortsStatus.AsObject[]>();
+	public onDidChangePortStatus = this._onDidChangePortStatus.event;
+
 	constructor(
-		context: vscode.ExtensionContext
+		private context: vscode.ExtensionContext,
+		private logger: Log
 	) {
 		this.clientOptions = {
 			'grpc.primary_user_agent': `${vscode.env.appName}/${vscode.version} ${context.extension.id}/${context.extension.packageJSON.version}`,
@@ -56,6 +71,117 @@ export class SupervisorConnection {
 		this.info = new InfoServiceClient(this.addr, grpc.credentials.createInsecure(), this.clientOptions);
 		this.port = new PortServiceClient(this.addr, grpc.credentials.createInsecure(), this.clientOptions);
 		this.terminal = new TerminalServiceClient(this.addr, grpc.credentials.createInsecure(), this.clientOptions);
+
+		this.context.subscriptions.push(this._onDidChangePortStatus);
+	}
+
+	async getToken(kind: string, host: string, scopes: string[]) {
+		const getTokenRequest = new GetTokenRequest();
+		getTokenRequest.setKind(kind);
+		getTokenRequest.setHost(host);
+		for (const scope of scopes) {
+			getTokenRequest.addScope(scope);
+		}
+		const getTokenResponse = await util.promisify(this.token.getToken.bind(this.token, getTokenRequest, this.metadata, {
+			deadline: Date.now() + SupervisorConnection.deadlines.long
+		}))();
+		return getTokenResponse.toObject();
+	}
+
+	async exposePort(port: number) {
+		const request = new ExposePortRequest();
+		request.setPort(port);
+		await util.promisify(this.control.exposePort.bind(this.control, request, this.metadata, {
+			deadline: Date.now() + SupervisorConnection.deadlines.normal
+		}))();
+	}
+
+	async retryAutoExposePort(port: number) {
+		const request = new RetryAutoExposeRequest();
+		request.setPort(port);
+		await util.promisify(this.port.retryAutoExpose.bind(this.port, request, this.metadata, {
+			deadline: Date.now() + SupervisorConnection.deadlines.normal
+		}))();
+	}
+
+	private _startObservePortsStatus = false;
+	startObservePortsStatus() {
+		if (this._startObservePortsStatus) {
+			return;
+		}
+		this._startObservePortsStatus = true;
+
+		let run = true;
+		let stopUpdates: Function | undefined;
+		(async () => {
+			while (run) {
+				try {
+					const req = new PortsStatusRequest();
+					req.setObserve(true);
+					const evts = this.status.portsStatus(req, this.metadata);
+					stopUpdates = evts.cancel.bind(evts);
+
+					await new Promise((resolve, reject) => {
+						evts.on('end', resolve);
+						evts.on('error', reject);
+						evts.on('data', (update: PortsStatusResponse) => {
+							this._onDidChangePortStatus.fire(update.getPortsList().map(p => p.toObject()));
+						});
+					});
+				} catch (err) {
+					if (!isGRPCErrorStatus(err, grpc.status.CANCELLED)) {
+						this.logger.error('cannot maintain connection to supervisor', err);
+						console.error('cannot maintain connection to supervisor', err);
+					}
+				} finally {
+					stopUpdates = undefined;
+				}
+				await new Promise(resolve => setTimeout(resolve, 1000));
+			}
+		})();
+		this.context.subscriptions.push({
+			dispose() {
+				run = false;
+				if (stopUpdates) {
+					stopUpdates();
+				}
+			}
+		});
+	}
+
+	async openTunnel(port: number, targetPort: number, privacy?: string) {
+		const request = new TunnelPortRequest();
+		request.setPort(port);
+		request.setTargetPort(targetPort);
+		request.setVisibility(privacy === 'public' ? TunnelVisiblity.NETWORK : TunnelVisiblity.HOST);
+		await util.promisify(this.port.tunnel.bind(this.port, request, this.metadata, {
+			deadline: Date.now() + SupervisorConnection.deadlines.normal
+		}))();
+	}
+
+	async closeTunnel(port: number) {
+		const request = new CloseTunnelRequest();
+		request.setPort(port);
+		await util.promisify(this.port.closeTunnel.bind(this.port, request, this.metadata, {
+			deadline: Date.now() + SupervisorConnection.deadlines.normal
+		}))();
+	}
+
+	async setTunnelVisibility(port: number, targetPort: number, visibility: TunnelVisiblity): Promise<void> {
+		const request = new TunnelPortRequest();
+		request.setPort(port);
+		request.setTargetPort(targetPort);
+		request.setVisibility(visibility);
+		await util.promisify(this.port.tunnel.bind(this.port, request, this.metadata, {
+			deadline: Date.now() + SupervisorConnection.deadlines.normal
+		}))();
+	}
+
+	async getWorkspaceInfo() {
+		const response = await util.promisify(this.info.workspaceInfo.bind(this.info, new WorkspaceInfoRequest(), this.metadata, {
+			deadline: Date.now() + SupervisorConnection.deadlines.long
+		}))();
+		return response.toObject();
 	}
 }
 
@@ -80,7 +206,7 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		readonly gitpod: GitpodConnection,
 		private readonly webSocket: Promise<ReconnectingWebSocket> | undefined,
 		readonly pendingWillCloseSocket: (() => Promise<void>)[],
-		readonly info: WorkspaceInfoResponse,
+		readonly info: WorkspaceInfoResponse.AsObject,
 		readonly owner: Promise<User>,
 		readonly user: Promise<User>,
 		readonly userTeams: Promise<Team[]>,
@@ -89,9 +215,9 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		readonly logger: Log,
 		readonly ipcHookCli: string | undefined
 	) {
-		this.workspaceContextUrl = vscode.Uri.parse(info.getWorkspaceContextUrl());
+		this.workspaceContextUrl = vscode.Uri.parse(info.workspaceContextUrl);
 
-		const gitpodFileUri = vscode.Uri.file(path.join(info.getCheckoutLocation(), '.gitpod.yml'));
+		const gitpodFileUri = vscode.Uri.file(path.join(info.checkoutLocation, '.gitpod.yml'));
 		this.gitpodYml = new GitpodYml(gitpodFileUri);
 		this.context.subscriptions.push(this.gitpodYml);
 	}
@@ -173,9 +299,9 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 	async fireAnalyticsEvent({ eventName, properties }: GitpodAnalyticsEvent): Promise<void> {
 		const baseProperties: BaseGitpodAnalyticsEventPropeties = {
 			sessionId: this.sessionId,
-			workspaceId: this.info.getWorkspaceId(),
-			instanceId: this.info.getInstanceId(),
-			debugWorkspace: typeof this.info['getDebugWorkspaceType'] === 'function' ? this.info.getDebugWorkspaceType() > 0 : false,
+			workspaceId: this.info.workspaceId,
+			instanceId: this.info.instanceId,
+			debugWorkspace: typeof this.info.debugWorkspaceType !== 'undefined' ? this.info.debugWorkspaceType > DebugWorkspaceType.NODEBUG : false,
 			appName: vscode.env.appName,
 			uiKind: vscode.env.uiKind === vscode.UIKind.Web ? 'web' : 'desktop',
 			devMode: this.devMode,
@@ -204,19 +330,9 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 	}
 
 	async setPortVisibility(port: number, visibility: PortVisibility): Promise<void> {
-		await this.gitpod.server.openPort(this.info.getWorkspaceId(), {
+		await this.gitpod.server.openPort(this.info.workspaceId, {
 			port,
 			visibility
 		});
-	}
-
-	async setTunnelVisibility(port: number, targetPort: number, visibility: TunnelVisiblity): Promise<void> {
-		const request = new TunnelPortRequest();
-		request.setPort(port);
-		request.setTargetPort(targetPort);
-		request.setVisibility(visibility);
-		await util.promisify(this.supervisor.port.tunnel.bind(this.supervisor.port, request, this.supervisor.metadata, {
-			deadline: Date.now() + this.supervisor.deadlines.normal
-		}))();
 	}
 }
