@@ -3,35 +3,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v2
+      - name: Auth Google Cloud SDK
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Set up Docker
+        run: |
+          gcloud auth configure-docker --quiet
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
       - name: Execute yarn
         run: |
           yarn --frozen-lockfile --network-timeout 180000
-
       - name: Build
         run: |
           yarn run build:gitpod-web
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Docker build and push
         uses: docker/build-push-action@v3
         with:
           push: true
           context: gitpod-web
-          tags: jeanp413/gitpod-web:latest
+          tags: eu.gcr.io/gitpod-core-dev/build/ide/gitpod-code-web:commit-${{ github.sha }}
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.IDE_SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
