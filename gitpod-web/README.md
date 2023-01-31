@@ -8,6 +8,6 @@ This extension enables [Gitpod's VS Code Browser integration](https://www.gitpod
 
 ## Source code and bug tracking
 
-The source code can be found in the [extension's respective folder in gitpod-io/openvscode-server](https://github.com/gitpod-io/openvscode-server/tree/gp-code/main/extensions/gitpod-web).
+The source code can be found in the [extension's respective folder in gitpod-io/gitpod-code](https://github.com/gitpod-io/gitpod-code/tree/master/gitpod-web).
 
 Bug reports should be filed at [gitpod-io/gitpod](https://github.com/gitpod-io/gitpod).

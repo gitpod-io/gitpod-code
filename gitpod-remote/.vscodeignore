@@ -1,9 +1,9 @@
 .gitignore
+node_modules/
 src/**
-!src/common/config.json
-out/**
-build/**
-extension.webpack.config.js
-extension-browser.webpack.config.js
+vscode.d.ts
+vscode.proposed.*.d.ts
+webpack.config.js
+rollup.config.js
 tsconfig.json
 yarn.lock

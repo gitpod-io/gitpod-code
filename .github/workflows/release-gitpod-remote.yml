@@ -1,0 +1,44 @@
+name: Release gitpod-remote
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+
+      - name: Package extension
+        id: package_vsix
+        run: |
+          set -e
+
+          yarn run compile:gitpod-shared
+
+          cd gitpod-remote
+          yarn package
+          echo ::set-output name=vsix_path::$(ls *.vsix)
+
+          version=$(jq --raw-output '.version' package.json)
+          echo ::set-output name=version::$version
+
+      - name: Publish to MS Marketplace
+        run: |
+          npx vsce publish --packagePath ${{ steps.package_vsix.outputs.vsix_path }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      # - name: Publish to Open VSX Registry
+      #   run: |
+      #     npx ovsx publish --packagePath ${{ steps.package_vsix.outputs.vsix_path }}
+      #   env:
+      #     OVSX_PAT: ${{ secrets.OPEN_VSX_PAT }}

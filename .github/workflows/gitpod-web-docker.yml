@@ -23,7 +23,7 @@ jobs:
           node-version: 16
       - name: Execute yarn
         run: |
-          yarn --frozen-lockfile --network-timeout 180000
+          yarn --frozen-lockfile
       - name: Build
         run: |
           yarn run build:gitpod-web
