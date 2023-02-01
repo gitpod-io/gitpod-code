@@ -208,7 +208,6 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		readonly pendingWillCloseSocket: (() => Promise<void>)[],
 		readonly info: WorkspaceInfoResponse.AsObject,
 		readonly owner: Promise<User>,
-		readonly user: Promise<User>,
 		readonly userTeams: Promise<Team[]>,
 		readonly instanceListener: Promise<WorkspaceInstanceUpdateListener>,
 		readonly workspaceOwned: Promise<boolean>,
