@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+		{
+			"name": "Launch gitpod-web",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceFolder}",
+				"--extensionDevelopmentPath=${workspaceRoot}/gitpod-web",
+				"--log=debug"
+			],
+			"outFiles": [
+				"${workspaceRoot}/gitpod-web/out/**/*.js",
+			]
+		},
+		{
+			"name": "Launch gitpod-remote",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceFolder}",
+				"--extensionDevelopmentPath=${workspaceRoot}/gitpod-remote",
+				"--log=debug"
+			],
+			"outFiles": [
+				"${workspaceRoot}/gitpod-remote/out/**/*.js",
+			]
+		},
+    ]
+}
