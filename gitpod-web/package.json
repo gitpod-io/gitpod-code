@@ -346,6 +346,10 @@
       ],
       "commandPalette": [
         {
+          "command": "gitpod.extensions.addToConfig",
+          "when": "false"
+        },
+        {
           "command": "gitpod.ports.preview",
           "when": "false"
         },
