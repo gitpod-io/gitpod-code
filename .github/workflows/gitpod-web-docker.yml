@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Auth Google Cloud SDK
         uses: google-github-actions/auth@v0
         with:
@@ -22,6 +22,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: 'yarn'
+          cache-dependency-path: |
+            'yarn.lock'
+            '**/yarn.lock'
       - name: Execute yarn
         run: |
           yarn --frozen-lockfile
@@ -42,6 +46,7 @@ jobs:
           echo "commit-${{ github.sha }}" >> summary.md
           echo "```" >> summary.md
           cat summary.md >> $GITHUB_STEP_SUMMARY
+
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
