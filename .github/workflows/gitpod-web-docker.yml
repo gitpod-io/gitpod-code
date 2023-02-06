@@ -1,6 +1,7 @@
 name: Gitpod-Web Docker
 on:
   workflow_dispatch:
+  push:
 
 jobs:
   build:
@@ -33,7 +34,13 @@ jobs:
           push: true
           context: gitpod-web
           tags: eu.gcr.io/gitpod-core-dev/build/ide/gitpod-code-web:commit-${{ github.sha }}
-
+      - name: Output the image tag to the GitHub Summary
+        run: |
+          echo "Successfully built the gitpod-web extension with the tag:" >> summary.md
+          echo "```md" >> summary.md
+          echo "commit-${{ github.sha }}" >> summary.md
+          echo "```" >> summary.md
+          cat summary.md >> $GITHUB_STEP_SUMMARY
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
