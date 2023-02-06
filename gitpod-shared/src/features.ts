@@ -52,7 +52,7 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 		return resp.token;
 	})();
 	const pendingWillCloseSocket: (() => Promise<void>)[] = [];
-	const pendignWebSocket = (async () => {
+	const pendingWebSocket = (async () => {
 		const serverToken = await pendingServerToken;
 		class GitpodServerWebSocket extends WebSocket {
 			constructor(address: string, protocols?: string | string[]) {
@@ -108,7 +108,7 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 		devMode,
 		supervisor,
 		gitpodService,
-		pendignWebSocket,
+		pendingWebSocket,
 		pendingWillCloseSocket,
 		workspaceInfo,
 		pendingGetOwner,
