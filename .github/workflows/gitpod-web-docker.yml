@@ -45,7 +45,12 @@ jobs:
           echo "\`\`\`" >> summary.md
           cat summary.md >> $GITHUB_STEP_SUMMARY
 
+      - name: Get previous job's status
+        id: lastrun
+        uses: filiptronicek/get-last-job-status@main
+
       - name: Slack Notification
+        if: ${{ (success() && steps.lastrun.outputs.status == 'failed') || failure() }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.IDE_SLACK_WEBHOOK }}
