@@ -12,7 +12,7 @@ import { ReleaseNotes } from './releaseNotes';
 import { registerWelcomeWalkthroughContribution, WELCOME_WALKTROUGH_KEY } from './welcomeWalktrough';
 import { ExperimentalSettings } from './experiments';
 import { GitpodPortViewProvider } from './portViewProvider';
-import { registerExtensionManagement } from './extensionManagment';
+import { registerExtensionManagement } from './extensionManagement';
 
 let gitpodContext: GitpodExtensionContext | undefined;
 export async function activate(context: vscode.ExtensionContext) {

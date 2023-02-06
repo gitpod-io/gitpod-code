@@ -11,7 +11,7 @@ import { ThrottledDelayer } from './util/async';
 import { download } from './util/download';
 import { GitpodExtensionContext, isYamlScalar, isYamlSeq } from 'gitpod-shared';
 import { getVSCodeProductJson } from './util/serverConfig';
-import { getVsixManifest, IRawGalleryQueryResult } from './util/extensionManagmentUtill';
+import { getVsixManifest, IRawGalleryQueryResult } from './util/extensionManagementUtil';
 
 const downloadedCache = new Set<string>();
 
@@ -187,7 +187,7 @@ export function registerExtensionManagement(context: GitpodExtensionContext): vo
 	const uninstalledExtensionMessageSuffix = ' extension is not installed, but not removed from .gitpod.yml';
 	const gitpodDiagnostics = vscode.languages.createDiagnosticCollection('gitpod');
 	const validateGitpodFileDelayer = new ThrottledDelayer(150);
-	const validateExtensionseDelayer = new ThrottledDelayer(1000); /** it can be very expensive for links to big extensions */
+	const validateExtensionsDelayer = new ThrottledDelayer(1000); /** it can be very expensive for links to big extensions */
 	let validateGitpodFileTokenSource: vscode.CancellationTokenSource | undefined;
 	let resolveAllDeprecated: vscode.CodeAction | undefined;
 	function validateGitpodFile(): void {
@@ -277,7 +277,7 @@ export function registerExtensionManagement(context: GitpodExtensionContext): vo
 					publishDiagnostics();
 				}
 
-				await validateExtensionseDelayer.trigger(async () => {
+				await validateExtensionsDelayer.trigger(async () => {
 					if (token.isCancellationRequested) {
 						return;
 					}
