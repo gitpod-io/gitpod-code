@@ -40,9 +40,9 @@ jobs:
         run: |
           echo "Successfully built the gitpod-web extension with the tag:" >> summary.md
           echo "" >> summary.md
-          echo "```" >> summary.md
+          echo "\`\`\`" >> summary.md
           echo "commit-${{ github.sha }}" >> summary.md
-          echo "```" >> summary.md
+          echo "\`\`\`" >> summary.md
           cat summary.md >> $GITHUB_STEP_SUMMARY
 
       - name: Slack Notification
