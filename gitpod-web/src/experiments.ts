@@ -9,7 +9,7 @@ import * as semver from 'semver';
 import Log from 'gitpod-shared/out/common/logger';
 import { URL } from 'url';
 
-const EXPERTIMENTAL_SETTINGS: string[] = [];
+const EXPERIMENTAL_SETTINGS: string[] = [];
 
 export class ExperimentalSettings {
 	private configcatClient: configcatcommon.IConfigCatClient;
@@ -34,7 +34,7 @@ export class ExperimentalSettings {
 	async get<T>(key: string, userId?: string, custom?: { [key: string]: string }): Promise<T | undefined> {
 		const config = vscode.workspace.getConfiguration('gitpod');
 		const values = config.inspect<T>(key.substring('gitpod.'.length));
-		if (!values || !EXPERTIMENTAL_SETTINGS.includes(key)) {
+		if (!values || !EXPERIMENTAL_SETTINGS.includes(key)) {
 			this.logger.error(`Cannot get invalid experimental setting '${key}'`);
 			return values?.globalValue ?? values?.defaultValue;
 		}
@@ -57,7 +57,7 @@ export class ExperimentalSettings {
 	async inspect<T>(key: string, userId?: string, custom?: { [key: string]: string }): Promise<{ key: string; defaultValue?: T; globalValue?: T; experimentValue?: T } | undefined> {
 		const config = vscode.workspace.getConfiguration('gitpod');
 		const values = config.inspect<T>(key.substring('gitpod.'.length));
-		if (!values || !EXPERTIMENTAL_SETTINGS.includes(key)) {
+		if (!values || !EXPERIMENTAL_SETTINGS.includes(key)) {
 			this.logger.error(`Cannot inspect invalid experimental setting '${key}'`);
 			return values;
 		}

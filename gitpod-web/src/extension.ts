@@ -96,10 +96,10 @@ function registerAuth(context: GitpodExtensionContext): void {
 		const onDidChangeSessionsEmitter = new vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>();
 		try {
 			const resolveGitpodUser = async () => {
-				const owser = await context.owner;
+				const owner = await context.owner;
 				return {
-					id: owser.id,
-					accountName: owser.name!
+					id: owner.id,
+					accountName: owner.name!
 				};
 			};
 			if (vscode.env.uiKind === vscode.UIKind.Web) {
