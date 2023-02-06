@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Auth Google Cloud SDK
         uses: google-github-actions/auth@v0
         with:
@@ -21,6 +21,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: 'yarn'
+          cache-dependency-path: '**/yarn.lock'
       - name: Execute yarn
         run: |
           yarn --frozen-lockfile
@@ -33,8 +35,21 @@ jobs:
           push: true
           context: gitpod-web
           tags: eu.gcr.io/gitpod-core-dev/build/ide/gitpod-code-web:commit-${{ github.sha }}
+      - name: Output the image tag to the GitHub Summary
+        run: |
+          echo "Successfully built the \`gitpod-web extension\` with the tag:" >> summary.md
+          echo "" >> summary.md
+          echo "\`\`\`" >> summary.md
+          echo "commit-${{ github.sha }}" >> summary.md
+          echo "\`\`\`" >> summary.md
+          cat summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Get previous job's status
+        id: lastrun
+        uses: filiptronicek/get-last-job-status@main
 
       - name: Slack Notification
+        if: ${{ (success() && steps.lastrun.outputs.status == 'failed') || failure() }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.IDE_SLACK_WEBHOOK }}
