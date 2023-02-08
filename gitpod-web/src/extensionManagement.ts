@@ -164,6 +164,7 @@ export function registerExtensionManagement(context: GitpodExtensionContext): vo
 			properties: { action: 'add' }
 		});
 		const yaml = await context.gitpodYml.getYaml();
+		console.log(id);
 		yaml.add(id);
 		await context.gitpodYml.writeContent(yaml.toString());
 	}));
@@ -173,6 +174,7 @@ export function registerExtensionManagement(context: GitpodExtensionContext): vo
 			properties: { action: 'remove' }
 		});
 		const yaml = await context.gitpodYml.getYaml();
+		console.log(id);
 		yaml.remove(id);
 		await context.gitpodYml.writeContent(yaml.toString());
 	}));
@@ -424,6 +426,7 @@ function createSearchExtensionCodeAction(id: string, diagnostic: vscode.Diagnost
 function createAddToConfigCodeAction(id: string, diagnostic: vscode.Diagnostic) {
 	const title = `Add ${id} extension to .gitpod.yml.`;
 	const codeAction = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
+	console.log(diagnostic.range);
 	codeAction.diagnostics = [diagnostic];
 	codeAction.isPreferred = true;
 	codeAction.command = {
@@ -437,6 +440,7 @@ function createAddToConfigCodeAction(id: string, diagnostic: vscode.Diagnostic) 
 function createRemoveFromConfigCodeAction(id: string, diagnostic: vscode.Diagnostic, document: vscode.TextDocument): vscode.CodeAction {
 	const title = `Remove ${id} extension from .gitpod.yml.`;
 	const codeAction = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
+	console.log(document.getText(diagnostic.range), diagnostic.range);
 	codeAction.diagnostics = [diagnostic];
 	codeAction.isPreferred = true;
 	codeAction.command = {
