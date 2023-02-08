@@ -665,7 +665,6 @@
     }
   },
   "scripts": {
-    "postinstall": "yarn update-dts",
     "vscode:prepublish": "yarn build:webview && webpack --mode production",
     "webpack": "webpack --mode development",
     "compile": "tsc -b",
@@ -673,7 +672,7 @@
     "build:webview": "rollup -c",
     "watch:webview": "rollup -c -w",
     "start:webview": "sirv public --no-clear",
-    "update-dts": "npx vscode-dts dev",
+    "update-dts": "cd \"src/@types\" && npx vscode-dts dev",
     "package": "npx vsce package --yarn --allow-star-activation"
   },
   "devDependencies": {

@@ -1,5 +1,3 @@
 node_modules/
 public/
 out/
-vscode.d.ts
-vscode.proposed.*.d.ts

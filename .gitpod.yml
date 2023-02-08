@@ -1,5 +1,17 @@
 tasks:
-  - init: yarn install
+  - init: |
+      yarn install
+    name: Compile gitpod-shared
+    command: |
+      cd gitpod-shared
+      yarn compile
+      gp sync-done shared
+      yarn watch
+  - name: Compile gitpod-web
+    command: |
+      cd gitpod-web
+      gp sync-await shared
+      yarn watch
 
 vscode:
   extensions:
