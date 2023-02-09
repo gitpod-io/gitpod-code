@@ -189,7 +189,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	if (vscode.env.uiKind === vscode.UIKind.Web) {
 		function openDesktop(scheme: 'vscode' | 'vscode-insiders'): void {
 			const uri = vscode.workspace.workspaceFile || vscode.workspace.workspaceFolders?.[0]?.uri;
-			vscode.env.openExternal(vscode.Uri.from({
+			vscode.commands.executeCommand('gitpod.api.openDesktop', vscode.Uri.from({
 				scheme,
 				authority: 'gitpod.gitpod-desktop',
 				path: uri?.path || context.info.workspaceLocationFile || context.info.workspaceLocationFolder || context.info.checkoutLocation,
@@ -199,7 +199,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 					gitpodHost: context.info.gitpodHost,
 					debugWorkspace: context.info.debugWorkspaceType > DebugWorkspaceType.NODEBUG
 				})
-			}));
+			}).toString());
 		}
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInStable', () => {
 			context.fireAnalyticsEvent({
