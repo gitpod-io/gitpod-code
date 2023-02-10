@@ -98,6 +98,11 @@
         "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
       },
       {
+        "command": "gitpod.setWorkspaceTimeout",
+        "title": "%configureTimeout%",
+        "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
+      },
+      {
         "command": "gitpod.takeSnapshot",
         "title": "%takeSnapshot%",
         "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
