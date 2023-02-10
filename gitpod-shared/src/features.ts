@@ -239,7 +239,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 		return context.gitpod.server.stopWorkspace(context.info.workspaceId);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.upgradeSubscription', () => {
-		const url = new GitpodHostUrl(context.info.gitpodHost).asUpgradeSubscription().toString();
+		const url = new GitpodHostUrl(context.info.gitpodHost).asBilling().toString();
 		context.fireAnalyticsEvent({
 			eventName: 'vscode_execute_command_gitpod_open_link',
 			properties: { url }
@@ -387,14 +387,33 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 			}
 		});
 		try {
-			const result = await context.gitpod.server.setWorkspaceTimeout(context.info.workspaceId, '180m');
-			if (result.resetTimeoutOnWorkspaces?.length > 0) {
-				vscode.window.showWarningMessage('Workspace timeout has been extended to three hours. This reset the workspace timeout for other workspaces.');
-			} else {
-				vscode.window.showInformationMessage('Workspace timeout has been extended to three hours.');
-			}
+			await context.gitpod.server.setWorkspaceTimeout(context.info.workspaceId, '180m');
+			vscode.window.showWarningMessage(`Workspace timeout has been extended to 180m.`);
 		} catch (err) {
 			vscode.window.showErrorMessage(`Cannot extend workspace timeout: ${err.toString()}`);
+		}
+	}));
+
+
+	context.subscriptions.push(vscode.commands.registerCommand('gitpod.setWorkspaceTimeout', async () => {
+		const timeout = await vscode.window.showInputBox({
+			value: '180m',
+            prompt: 'Please input the timeout time, such as 30m, 1h, 2h, 3h',
+		});
+		if (!timeout) {
+			return;
+		}
+		context.fireAnalyticsEvent({
+			eventName: 'vscode_execute_command_gitpod_workspace',
+			properties: {
+				action: 'configure-timeout'
+			}
+		});
+		try {
+			const { humanReadableDuration } = await context.gitpod.server.setWorkspaceTimeout(context.info.workspaceId, timeout);
+			vscode.window.showWarningMessage(`Workspace timeout has been changed to ${humanReadableDuration ?? timeout}.`);
+		} catch (err) {
+			vscode.window.showErrorMessage(`Cannot configure workspace timeout: ${err.toString()}`);
 		}
 	}));
 
@@ -405,10 +424,10 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 
 	const listener = await context.instanceListener;
 	const extendTimeoutStatusBarItem = vscode.window.createStatusBarItem('gitpod.extendTimeout', vscode.StatusBarAlignment.Right, -100);
-	extendTimeoutStatusBarItem.name = 'Click to extend the workspace timeout.';
+	extendTimeoutStatusBarItem.name = 'Extend the workspace timeout.';
 	context.subscriptions.push(extendTimeoutStatusBarItem);
 	extendTimeoutStatusBarItem.text = '$(watch)';
-	extendTimeoutStatusBarItem.command = 'gitpod.ExtendTimeout';
+	extendTimeoutStatusBarItem.command = 'gitpod.setWorkspaceTimeout';
 	const update = () => {
 		const instance = listener.info.latestInstance;
 		if (!instance) {
@@ -416,7 +435,9 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 			return;
 		}
 		extendTimeoutStatusBarItem.tooltip = `Workspace Timeout: ${instance.status.timeout}. Click to extend.`;
-		extendTimeoutStatusBarItem.color = instance.status.timeout === '180m' ? new vscode.ThemeColor('notificationsWarningIcon.foreground') : undefined;
+
+		// TODO: query default timeout, currently all paid plan default timeout is 60m. 
+		extendTimeoutStatusBarItem.color = instance.status.timeout !== '60m' ? new vscode.ThemeColor('notificationsWarningIcon.foreground') : undefined;
 		extendTimeoutStatusBarItem.show();
 	};
 	update();

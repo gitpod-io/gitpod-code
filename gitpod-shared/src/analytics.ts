@@ -35,7 +35,7 @@ export type GitpodAnalyticsEvent =
 		targetQualifier?: 'stable' | 'insiders';
 	}> |
 	GAET<'vscode_execute_command_gitpod_workspace', {
-		action: 'share' | 'stop-sharing' | 'stop' | 'snapshot' | 'extend-timeout';
+		action: 'share' | 'stop-sharing' | 'stop' | 'snapshot' | 'extend-timeout'| 'configure-timeout';
 	}> |
 	GAET<'vscode_execute_command_gitpod_ports', {
 		action: 'private' | 'public' | 'preview' | 'openBrowser' | 'urlCopy';
