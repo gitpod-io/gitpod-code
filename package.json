@@ -11,6 +11,7 @@
     "postinstall": "node scripts/postinstall.js",
     "compile:gitpod-shared": "yarn --cwd gitpod-shared compile",
     "build:gitpod-web": "yarn compile:gitpod-shared && yarn --cwd gitpod-web vscode:prepublish",
-    "build:gitpod-remote": "yarn compile:gitpod-shared && yarn --cwd gitpod-remote vscode:prepublish"
+    "build:gitpod-remote": "yarn compile:gitpod-shared && yarn --cwd gitpod-remote vscode:prepublish",
+    "hot-reload:gitpod-web": "yarn compile:gitpod-shared && yarn build:gitpod-web && cp -R ./gitpod-web /ide/extensions/gitpod-web"
   }
 }

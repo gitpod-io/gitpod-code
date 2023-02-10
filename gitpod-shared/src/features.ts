@@ -428,14 +428,24 @@ export function registerNotifications(context: GitpodExtensionContext): void {
 		let run = true;
 		let stopUpdates: Function | undefined;
 		(async () => {
+			let events: grpc.ClientReadableStream<SubscribeResponse> | undefined;
 			while (run) {
 				try {
 					const evts = context.supervisor.notification.subscribe(new SubscribeRequest(), context.supervisor.metadata);
+					events = evts
 					stopUpdates = evts.cancel.bind(evts);
 
 					await new Promise((resolve, reject) => {
-						evts.on('end', resolve);
-						evts.on('error', reject);
+						function handleResolve () {
+							evts.cancel();
+							resolve(0);
+						}
+						function handleReject(err: any) {
+							evts.cancel();
+							reject(err);
+						};
+						evts.on('end', handleResolve);
+						evts.on('error', handleReject);
 						evts.on('data', async (result: SubscribeResponse) => {
 							const request = result.getRequest();
 							if (request) {
@@ -462,8 +472,11 @@ export function registerNotifications(context: GitpodExtensionContext): void {
 								context.supervisor.notification.respond(respondRequest, context.supervisor.metadata, {
 									deadline: Date.now() + SupervisorConnection.deadlines.normal
 								}, (error, _) => {
-									if (error?.code !== grpc.status.DEADLINE_EXCEEDED) {
-										reject(error);
+									if (!error) {
+										return
+									}
+									if (error.code !== grpc.status.DEADLINE_EXCEEDED) {
+										handleReject(error);
 									}
 								});
 							}
@@ -478,6 +491,7 @@ export function registerNotifications(context: GitpodExtensionContext): void {
 					}
 				} finally {
 					stopUpdates = undefined;
+					events?.cancel()
 				}
 				await new Promise(resolve => setTimeout(resolve, 1000));
 			}
