@@ -29,6 +29,7 @@ jobs:
           echo "version=$(jq --raw-output '.version' package.json)" >> $GITHUB_OUTPUT
 
       - name: Publish to MS Marketplace
+        working-directory: ./gitpod-remote
         run: |
           npx vsce publish --packagePath ${{ steps.package_vsix.outputs.vsix_path }}
         env:
