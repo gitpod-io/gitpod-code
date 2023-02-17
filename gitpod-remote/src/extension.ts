@@ -54,7 +54,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// For port tunneling we rely on Remote SSH capabilities
 	// and gitpod.gitpod to disable auto tunneling from the current local machine.
-	vscode.commands.executeCommand('gitpod.api.autoTunnel', gitpodContext.info.getGitpodHost(), gitpodContext.info.getInstanceId(), false);
+	vscode.commands.executeCommand('gitpod.api.autoTunnel', gitpodContext.info.gitpodHost, gitpodContext.info.instanceId, false);
 
 	// For collecting logs, will be called by gitpod-desktop extension;
 	context.subscriptions.push(vscode.commands.registerCommand('__gitpod.getGitpodRemoteLogsUri', () => {
@@ -111,7 +111,7 @@ export function registerHearbeat(context: GitpodExtensionContext): vscode.Dispos
 			context.logger.trace('sending ' + suffix);
 		}
 		try {
-			await context.gitpod.server.sendHeartBeat({ instanceId: context.info.getInstanceId(), wasClosed });
+			await context.gitpod.server.sendHeartBeat({ instanceId: context.info.instanceId, wasClosed });
 			if (wasClosed) {
 				context.fireAnalyticsEvent({ eventName: 'ide_close_signal', properties: { clientKind: 'vscode' } });
 			}

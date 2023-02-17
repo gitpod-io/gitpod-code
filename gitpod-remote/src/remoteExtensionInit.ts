@@ -60,7 +60,7 @@ export async function installInitialExtensions(context: GitpodExtensionContext) 
 	context.logger.info('installing initial extensions...');
 	const extensions: (vscode.Uri | string)[] = [];
 	try {
-		const workspaceContextUri = vscode.Uri.parse(context.info.getWorkspaceContextUrl());
+		const workspaceContextUri = vscode.Uri.parse(context.info.workspaceContextUrl);
 		extensions.push('redhat.vscode-yaml');
 		if (/github\.com/i.test(workspaceContextUri.authority)) {
 			extensions.push('github.vscode-pull-request-github');
