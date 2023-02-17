@@ -95,7 +95,7 @@
       },
       {
         "command": "gitpod.setWorkspaceTimeout",
-        "title": "%customizeTimeout%",
+        "title": "%configureTimeout%",
         "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
       },
       {

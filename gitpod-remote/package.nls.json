@@ -12,7 +12,7 @@
 	"stopWorkspace": "Gitpod: Stop Workspace",
 	"upgradeSubscription": "Gitpod: Upgrade Subscription",
 	"extendTimeout": "Gitpod: Extend Workspace Timeout (180m)",
-    "configureTimeout": "Gitpod: Configure Workspace Timeout",
+	"configureTimeout": "Gitpod: Configure Workspace Timeout",
 	"takeSnapshot": "Gitpod: Share Workspace Snapshot",
 	"shareWorkspace": "Gitpod: Share Running Workspace",
 	"stopSharingWorkspace": "Gitpod: Stop Sharing Running Workspace",
