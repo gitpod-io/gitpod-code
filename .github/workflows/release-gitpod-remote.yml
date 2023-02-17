@@ -21,15 +21,12 @@ jobs:
         id: package_vsix
         run: |
           set -e
-
           yarn run compile:gitpod-shared
 
           cd gitpod-remote
           yarn package
-          echo ::set-output name=vsix_path::$(ls *.vsix)
-
-          version=$(jq --raw-output '.version' package.json)
-          echo ::set-output name=version::$version
+          echo "vsix_path=$(ls *.vsix)" >> $GITHUB_OUTPUT
+          echo "version=$(jq --raw-output '.version' package.json)" >> $GITHUB_OUTPUT
 
       - name: Publish to MS Marketplace
         run: |
