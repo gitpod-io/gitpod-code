@@ -49,11 +49,13 @@ export type GitpodAnalyticsEvent =
 	GAET<'ide_close_signal', {
 		clientKind: 'vscode';
 	}> |
-	GAET<'vscode_execute_command_inner_loop', {
-		action: 'build' | 'run' | 'feedback' | 'learn';
-		location: 'codelens' | 'editorContext' | 'editorTitle';
-		source: 'gitpodYml' | 'dockerfile';
-	}>;
+	GitpodValidateAnalytics;
+
+export type GitpodValidateAnalytics = GAET<'vscode_validate', {
+	action: 'run' | 'feedback' | 'learn' | 'cancel' | 'neverAgain';
+	location: 'codelens' | 'editorContext' | 'editorTitle' | 'notification';
+	source: 'gitpodYml' | 'dockerfile';
+}>;
 
 export function registerUsageAnalytics(context: GitpodExtensionContext): void {
 	context.fireAnalyticsEvent({ eventName: 'vscode_session', properties: {} });

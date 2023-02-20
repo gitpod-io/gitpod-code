@@ -1,3 +1,4 @@
+image: gitpod/workspace-node
 tasks:
   - init: |
       yarn install
@@ -10,6 +11,11 @@ tasks:
   - name: Compile gitpod-web
     command: |
       cd gitpod-web
+      gp sync-await shared
+      yarn watch
+  - name: Compile gitpod-remote
+    command: |
+      cd gitpod-remote
       gp sync-await shared
       yarn watch
 
