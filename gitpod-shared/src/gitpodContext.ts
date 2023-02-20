@@ -29,6 +29,7 @@ import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';
 import { PortsStatusRequest, PortsStatusResponse, PortsStatus } from '@gitpod/supervisor-api-grpc/lib/status_pb';
 import { isGRPCErrorStatus } from './common/utils';
 import { ExposePortRequest } from '@gitpod/supervisor-api-grpc/lib/control_pb';
+import { ExperimentalSettings } from './experiments';
 
 // Important:
 // This class should performs all supervisor API calls used outside this module.
@@ -212,7 +213,8 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		readonly instanceListener: Promise<WorkspaceInstanceUpdateListener>,
 		readonly workspaceOwned: Promise<boolean>,
 		readonly logger: Log,
-		readonly ipcHookCli: string | undefined
+		readonly ipcHookCli: string | undefined,
+		readonly experiments: ExperimentalSettings
 	) {
 		this.workspaceContextUrl = vscode.Uri.parse(info.workspaceContextUrl);
 

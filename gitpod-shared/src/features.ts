@@ -24,6 +24,7 @@ import WebSocket = require('ws');
 import Log from './common/logger';
 import { isGRPCErrorStatus } from './common/utils';
 import { GitpodConnection, GitpodExtensionContext, SupervisorConnection } from './gitpodContext';
+import { ExperimentalSettings } from './experiments';
 
 export async function createGitpodExtensionContext(context: vscode.ExtensionContext): Promise<GitpodExtensionContext | undefined> {
 	const logger = new Log('Gitpod Workspace');
@@ -103,6 +104,9 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 
 	const ipcHookCli = installCLIProxy(context, logger);
 
+	const experiments = new ExperimentalSettings('gitpod', context, logger, gitpodHost, pendingGetOwner, pendingGetUserTeams);
+	context.subscriptions.push(experiments);
+
 	return new GitpodExtensionContext(
 		context,
 		devMode,
@@ -116,7 +120,8 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 		pendingInstanceListener,
 		pendingWorkspaceOwned,
 		logger,
-		ipcHookCli
+		ipcHookCli,
+		experiments
 	);
 }
 

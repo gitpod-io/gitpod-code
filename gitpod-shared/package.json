@@ -29,6 +29,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
+    "configcat-node": "^8.0.0",
     "@gitpod/gitpod-protocol": "main",
     "@gitpod/supervisor-api-grpc": "ak-rebuild-debug",
     "@vscode/codicons": "^0.0.31",

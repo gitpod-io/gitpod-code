@@ -5,7 +5,7 @@
 import * as vscode from 'vscode';
 import { registerActiveLanguageAnalytics, registerUsageAnalytics } from './analytics';
 import { createGitpodExtensionContext, registerDefaultLayout, registerNotifications, registerWorkspaceCommands, registerWorkspaceSharing, registerWorkspaceTimeout } from './features';
-import { GitpodCodelens } from './gitpodCodelens';
+import { ValidateService } from './validate';
 import { GitpodExtensionContext } from './gitpodContext';
 
 export { GitpodExtensionContext } from './gitpodContext';
@@ -39,7 +39,7 @@ export async function setupGitpodContext(context: vscode.ExtensionContext): Prom
 	registerWorkspaceTimeout(gitpodContext);
 	registerNotifications(gitpodContext);
 	registerDefaultLayout(gitpodContext);
-	gitpodContext.subscriptions.push(new GitpodCodelens(gitpodContext));
+	gitpodContext.subscriptions.push(new ValidateService(gitpodContext));
 
 	return gitpodContext;
 }

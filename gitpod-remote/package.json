@@ -154,19 +154,9 @@
         "icon": "$(eye-closed)"
       },
       {
-        "command": "gitpod.gitpodyml.build",
-        "title": "%buildGitpodYml%",
-        "icon": "$(tools)"
-      },
-      {
         "command": "gitpod.gitpodyml.run",
         "title": "%runGitpodYml%",
         "icon": "$(play)"
-      },
-      {
-        "command": "gitpod.gitpodyml.editorContext.build",
-        "title": "%buildGitpodYml%",
-        "icon": "$(tools)"
       },
       {
         "command": "gitpod.gitpodyml.editorContext.run",
@@ -174,29 +164,14 @@
         "icon": "$(play)"
       },
       {
-        "command": "gitpod.gitpodyml.dockerfile.editorContext.build",
-        "title": "%buildGitpodYml%",
-        "icon": "$(tools)"
-      },
-      {
         "command": "gitpod.gitpodyml.dockerfile.editorContext.run",
         "title": "%runGitpodYml%",
         "icon": "$(play)"
       },
       {
-        "command": "gitpod.gitpodyml.editorTitle.build",
-        "title": "%buildGitpodYml%",
-        "icon": "$(tools)"
-      },
-      {
         "command": "gitpod.gitpodyml.editorTitle.run",
         "title": "%runGitpodYml%",
         "icon": "$(play)"
-      },
-      {
-        "command": "gitpod.gitpodyml.dockerfile.editorTitle.build",
-        "title": "%buildGitpodYml%",
-        "icon": "$(tools)"
       },
       {
         "command": "gitpod.gitpodyml.dockerfile.editorTitle.run",
@@ -284,45 +259,25 @@
       ],
       "editor/context": [
         {
-          "command": "gitpod.gitpodyml.editorContext.build",
-          "when": "gitpod.run-gp.enabled && resourceFilename == '.gitpod.yml' && resourceScheme == file",
-          "group": "0_navigation@0"
-        },
-        {
           "command": "gitpod.gitpodyml.editorContext.run",
-          "when": "gitpod.run-gp.enabled && resourceFilename == '.gitpod.yml' && resourceScheme == file",
-          "group": "0_navigation@0"
-        },
-        {
-          "command": "gitpod.gitpodyml.dockerfile.editorContext.build",
-          "when": "gitpod.run-gp.enabled && gitpod.run-gp.dockerfile && resourceFilename =~ /^Dockerfile$|\\.Dockerfile$/ && resourceScheme == file",
+          "when": "gitpod.rebuild.enabled && resourceFilename == '.gitpod.yml' && resourceScheme == file",
           "group": "0_navigation@0"
         },
         {
           "command": "gitpod.gitpodyml.dockerfile.editorContext.run",
-          "when": "gitpod.run-gp.enabled && gitpod.run-gp.dockerfile && resourceFilename =~ /^Dockerfile$|\\.Dockerfile$/ && resourceScheme == file",
+          "when": "gitpod.rebuild.enabled && gitpod.rebuild.dockerfile",
           "group": "0_navigation@0"
         }
       ],
       "editor/title": [
         {
-          "command": "gitpod.gitpodyml.editorTitle.build",
-          "when": "gitpod.run-gp.enabled && resourceFilename == '.gitpod.yml' && resourceScheme == file",
-          "group": "navigation"
-        },
-        {
           "command": "gitpod.gitpodyml.editorTitle.run",
-          "when": "gitpod.run-gp.enabled && resourceFilename == '.gitpod.yml' && resourceScheme == file",
-          "group": "navigation"
-        },
-        {
-          "command": "gitpod.gitpodyml.dockerfile.editorTitle.build",
-          "when": "gitpod.run-gp.enabled && gitpod.run-gp.dockerfile && resourceFilename =~ /^Dockerfile$|\\.Dockerfile$/ && resourceScheme == file",
+          "when": "gitpod.rebuild.enabled && resourceFilename == '.gitpod.yml' && resourceScheme == file",
           "group": "navigation"
         },
         {
           "command": "gitpod.gitpodyml.dockerfile.editorTitle.run",
-          "when": "gitpod.run-gp.enabled && gitpod.run-gp.dockerfile && resourceFilename =~ /^Dockerfile$|\\.Dockerfile$/ && resourceScheme == file",
+          "when": "gitpod.rebuild.enabled && gitpod.rebuild.dockerfile",
           "group": "navigation"
         }
       ],
@@ -356,23 +311,11 @@
           "when": "false"
         },
         {
-          "command": "gitpod.gitpodyml.build",
-          "when": "gitpod.run-gp.enabled"
-        },
-        {
           "command": "gitpod.gitpodyml.run",
-          "when": "gitpod.run-gp.enabled"
-        },
-        {
-          "command": "gitpod.gitpodyml.editorContext.build",
-          "when": "false"
+          "when": "gitpod.rebuild.enabled"
         },
         {
           "command": "gitpod.gitpodyml.editorContext.run",
-          "when": "false"
-        },
-        {
-          "command": "gitpod.gitpodyml.dockerfile.editorContext.build",
           "when": "false"
         },
         {
@@ -380,15 +323,7 @@
           "when": "false"
         },
         {
-          "command": "gitpod.gitpodyml.editorTitle.build",
-          "when": "false"
-        },
-        {
           "command": "gitpod.gitpodyml.editorTitle.run",
-          "when": "false"
-        },
-        {
-          "command": "gitpod.gitpodyml.dockerfile.editorTitle.build",
           "when": "false"
         },
         {
@@ -396,6 +331,16 @@
           "when": "false"
         }
       ]
+    },
+    "configuration": {
+      "title": "Gitpod",
+      "properties": {
+        "gitpod.validate.neverPrompt": {
+          "type": "boolean",
+          "description": "Control whether to prompt to validate the workspace configuration on change.",
+          "default": false
+        }
+      }
     },
     "views": {
       "portsView": [

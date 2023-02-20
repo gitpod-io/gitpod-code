@@ -10,7 +10,6 @@ import fetch from 'node-fetch';
 import * as vscode from 'vscode';
 import { ReleaseNotes } from './releaseNotes';
 import { registerWelcomeWalkthroughContribution, WELCOME_WALKTROUGH_KEY } from './welcomeWalktrough';
-import { ExperimentalSettings } from './experiments';
 import { GitpodPortViewProvider } from './portViewProvider';
 import { registerExtensionManagement } from './extensionManagement';
 
@@ -227,11 +226,6 @@ function registerAuth(context: GitpodExtensionContext): void {
 interface PortItem { port: GitpodWorkspacePort }
 
 async function registerPorts(context: GitpodExtensionContext): Promise<void> {
-
-	const packageJSON = context.extension.packageJSON;
-	const experiments = new ExperimentalSettings('gitpod', packageJSON.version, context.logger, context.info.gitpodHost);
-	context.subscriptions.push(experiments);
-
 	const portMap = new Map<number, GitpodWorkspacePort>();
 	const tunnelMap = new Map<number, vscode.TunnelDescription>();
 
