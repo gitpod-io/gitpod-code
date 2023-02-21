@@ -37,7 +37,7 @@ jobs:
           tags: eu.gcr.io/gitpod-core-dev/build/ide/gitpod-code-web:commit-${{ github.sha }}
       - name: Output the image tag to the GitHub Summary
         run: |
-          echo "Successfully built the \`gitpod-web extension\` with the tag:" >> summary.md
+          echo "Successfully built the \`gitpod-web\` extension with the tag:" >> summary.md
           echo "" >> summary.md
           echo "\`\`\`" >> summary.md
           echo "commit-${{ github.sha }}" >> summary.md
