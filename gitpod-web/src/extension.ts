@@ -4,7 +4,7 @@
 
 import { GitpodExtensionContext, setupGitpodContext, registerTasks, registerIpcHookCli, ExposedServedGitpodWorkspacePort, GitpodWorkspacePort, isExposedServedGitpodWorkspacePort } from 'gitpod-shared';
 import { PortsStatus, PortVisibility } from '@gitpod/supervisor-api-grpc/lib/status_pb';
-import { TunnelVisiblity} from '@gitpod/supervisor-api-grpc/lib/port_pb';
+import { TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
 import type * as keytarType from 'keytar';
 import fetch from 'node-fetch';
 import * as vscode from 'vscode';
@@ -313,21 +313,27 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 	const portsStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	context.subscriptions.push(portsStatusBarItem);
 	async function updateStatusBar(): Promise<void> {
-		const exposedPorts: number[] = [];
+		const publicExposedPorts: number[] = [];
+		const privateExposedPorts: number[] = [];
 
 		for (const port of portMap.values()) {
 			if (isExposedServedGitpodWorkspacePort(port)) {
-				exposedPorts.push(port.status.localPort);
+				if (port.status.exposed.visibility === PortVisibility.PUBLIC) {
+					publicExposedPorts.push(port.status.localPort);
+				} else {
+					privateExposedPorts.push(port.status.localPort);
+				}
 			}
 		}
 
 		let text: string;
 		let tooltip = 'Click to open "Ports View"';
-		if (exposedPorts.length) {
+		if (publicExposedPorts.length + privateExposedPorts.length) {
 			text = 'Ports:';
 			tooltip += '\n\nPorts';
-			text += ` ${exposedPorts.join(', ')}`;
-			tooltip += `\nPublic: ${exposedPorts.join(', ')}`;
+			text += ` ${[...publicExposedPorts, ...privateExposedPorts].join(', ')}`;
+			tooltip += publicExposedPorts.length ? `\nPublic: ${publicExposedPorts.join(', ')}` : '';
+			tooltip += privateExposedPorts.length ? `\nPrivate: ${privateExposedPorts.join(', ')}` : '';
 		} else {
 			text = '$(circle-slash) No open ports';
 		}
