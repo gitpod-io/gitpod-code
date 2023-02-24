@@ -1,0 +1,22 @@
+{
+    "folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "./gitpod-shared"
+        },
+        {
+            "path": "./gitpod-remote"
+        },
+        {
+            "path": "./gitpod-web"
+        },
+        {
+            "path": "../gitpod/components/supervisor"
+        },
+        {
+            "path": "../gitpod/components/gitpod-cli"
+        }
+    ],
+}

@@ -111,8 +111,8 @@ export class ValidateService extends vscode.Disposable {
 			new vscode.Task(
 				{ type: 'shell' },
 				vscode.TaskScope.Workspace,
-				ValidateAction.description,
-				ValidateAction.command,
+				'validate',
+				'gitpod',
 				new vscode.ShellExecution(ValidateAction.shellCommand)));
 	}
 

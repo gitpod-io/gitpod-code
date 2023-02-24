@@ -1,4 +1,4 @@
-image: gitpod/workspace-node
+image: gitpod/workspace-full
 tasks:
   - init: |
       yarn install
@@ -18,8 +18,23 @@ tasks:
       cd gitpod-remote
       gp sync-await shared
       yarn watch
+  - name: supervisor
+    before: |
+      cd /workspace/gitpod/components/supervisor
+    init: |
+      go mod verify
+  - name: gitpod-cli
+    before: |
+      cd /workspace/gitpod/components/gitpod-cli
+    init: |
+      go mod verify
 
 vscode:
   extensions:
     - dbaeumer.vscode-eslint
     - svelte.svelte-vscode
+
+workspaceLocation: gitpod-code/main.code-workspace
+additionalRepositories:
+  - url: https://github.com/gitpod-io/gitpod
+    checkoutLocation: gitpod
