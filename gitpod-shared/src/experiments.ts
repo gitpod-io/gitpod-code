@@ -38,42 +38,35 @@ export class ExperimentalSettings {
 		});
 	}
 
-	async get<T>(key: EXPERIMENTAL_SETTINGS): Promise<T | undefined> {
+	async get<T>(key: EXPERIMENTAL_SETTINGS, defaultValue: T): Promise<T> {
 		const config = vscode.workspace.getConfiguration(experimentsSection);
 		const values = config.inspect<T>(key.substring((experimentsSection + '.').length));
 		if (!values) {
 			this.logger.error(`Cannot get invalid experimental setting '${key}'`);
-			return undefined;
+			return defaultValue;
 		}
 		if (values.globalValue !== undefined) {
 			// User setting have priority over configcat so return early
 			return values.globalValue;
 		}
-		const experimentValue = await this.getExperimentValue<T>(key);
-		return experimentValue ?? values.defaultValue;
+		return this.getExperimentValue<T>(key, defaultValue);
 	}
 
-	private async getExperimentValue<T>(key: string): Promise<T | undefined> {
+	private async getExperimentValue<T>(key: string, defaultValue: T): Promise<T> {
 		const configcatKey = key.replace(/\./g, '_'); // '.' are not allowed in configcat
-		const unresolved = '__unressssolved__'
-
 		const user = await this.pendingOwner;
 		const email = User.getPrimaryEmail(user);
 		const teams = await this.pendingTeams;
 		if (teams.length) {
 			for (const team of teams) {
-				const value = (await this.configcatClient.getValueAsync(configcatKey, unresolved, this.getConfigcatUser(user.id, email, team.id)));
-				if (value != unresolved) {
+				const value = (await this.configcatClient.getValueAsync(configcatKey, defaultValue, this.getConfigcatUser(user.id, email, team.id)));
+				if (value != defaultValue) {
 					return value as T;
 				}
 			}
-		} else {
-			const value = (await this.configcatClient.getValueAsync(configcatKey, unresolved, this.getConfigcatUser(user.id, email, undefined)));
-			if (value != unresolved) {
-				return value as T;
-			}
+			return defaultValue;
 		}
-		return undefined;
+		return this.configcatClient.getValueAsync(configcatKey, defaultValue, this.getConfigcatUser(user.id, email, undefined));
 	}
 
 	private getConfigcatUser(userId: string, email: string | undefined, teamId: string | undefined): configcatcommon.User {

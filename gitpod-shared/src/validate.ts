@@ -123,7 +123,7 @@ export class ValidateService extends vscode.Disposable {
 	}
 
 	private async initialize(): Promise<void> {
-		if (!(await this.context.experiments.get<boolean>('gitpod.experiments.rebuildHints'))) {
+		if (!(await this.context.experiments.get<boolean>('gitpod.experiments.rebuildHints', false))) {
 			return;
 		}
 

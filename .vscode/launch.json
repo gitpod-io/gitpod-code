@@ -16,6 +16,7 @@
 			],
 			"outFiles": [
 				"${workspaceRoot}/gitpod-web/out/**/*.js",
+				"${workspaceRoot}/gitpod-shared/out/**/*.js",
 			]
 		},
 		{
