@@ -19,6 +19,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 import { URL } from 'url';
 import * as util from 'util';
 import * as vscode from 'vscode';
+import * as child_process from 'child_process';
 import { CancellationToken, ConsoleLogger, listen as doListen } from 'vscode-ws-jsonrpc';
 import WebSocket = require('ws');
 import Log from './common/logger';
@@ -403,7 +404,7 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.setWorkspaceTimeout', async () => {
 		const timeout = await vscode.window.showInputBox({
 			value: '180m',
-            prompt: 'Please input the timeout time, such as 30m, 1h, 2h, 3h',
+			prompt: 'Please input the timeout time, such as 30m, 1h, 2h, 3h',
 		});
 		if (!timeout) {
 			return;
@@ -449,34 +450,64 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 	context.subscriptions.push(listener.onDidChange(update));
 }
 
-export function registerNotifications(context: GitpodExtensionContext): void {
-	function observeNotifications(): vscode.Disposable {
-		let run = true;
-		let stopUpdates: Function | undefined;
-		(async () => {
-			let events: grpc.ClientReadableStream<SubscribeResponse> | undefined;
-			while (run) {
-				try {
-					const evts = context.supervisor.notification.subscribe(new SubscribeRequest(), context.supervisor.metadata);
-					events = evts
-					stopUpdates = evts.cancel.bind(evts);
+export function registerActiveNotifications(context: GitpodExtensionContext): void {
+	let tokenSource = new vscode.CancellationTokenSource();
+	tokenSource.cancel();
+	context.subscriptions.push(new vscode.Disposable(() => tokenSource.cancel()));
+	const updateActiveNotifications = () => {
+		if (!vscode.window.state.focused) {
+			tokenSource.cancel();
+		} else if (tokenSource.token.isCancellationRequested) {
+			tokenSource = new vscode.CancellationTokenSource();
+			const subscribeRequest = new SubscribeRequest();
+			subscribeRequest.setActive(true);
+			const toStop = observeNotifications(context, subscribeRequest);
+			tokenSource.token.onCancellationRequested(() => toStop.dispose());
+		}
+	};
+	updateActiveNotifications();
+	context.subscriptions.push(vscode.window.onDidChangeWindowState(() => updateActiveNotifications()));
+}
 
-					await new Promise((resolve, reject) => {
-						function handleResolve () {
-							evts.cancel();
-							resolve(0);
+export function registerNotifications(context: GitpodExtensionContext): void {
+	const subscribeRequest = new SubscribeRequest();
+	subscribeRequest.setActive(false);
+	context.subscriptions.push(observeNotifications(context, subscribeRequest));
+}
+
+function observeNotifications(context: GitpodExtensionContext, subscribeRequest: SubscribeRequest): vscode.Disposable {
+	let run = true;
+	let stopUpdates: Function | undefined;
+	(async () => {
+		let events: grpc.ClientReadableStream<SubscribeResponse> | undefined;
+		while (run) {
+			try {
+				const evts = context.supervisor.notification.subscribe(subscribeRequest, context.supervisor.metadata);
+				events = evts
+				stopUpdates = evts.cancel.bind(evts);
+
+				await new Promise((resolve, reject) => {
+					function handleResolve() {
+						evts.cancel();
+						resolve(0);
+					}
+					function handleReject(err: any) {
+						evts.cancel();
+						reject(err);
+					};
+					evts.on('end', handleResolve);
+					evts.on('error', handleReject);
+					evts.on('data', async (result: SubscribeResponse) => {
+						const request = result.getRequest();
+						if (!request) {
+							return;
 						}
-						function handleReject(err: any) {
-							evts.cancel();
-							reject(err);
-						};
-						evts.on('end', handleResolve);
-						evts.on('error', handleReject);
-						evts.on('data', async (result: SubscribeResponse) => {
-							const request = result.getRequest();
-							if (request) {
+						const response = new NotifyResponse();
+
+						try {
+							const message = request.getMessage();
+							if (message) {
 								const level = request.getLevel();
-								const message = request.getMessage();
 								const actions = request.getActionsList();
 								let choice: string | undefined;
 								switch (level) {
@@ -490,46 +521,69 @@ export function registerNotifications(context: GitpodExtensionContext): void {
 									default:
 										choice = await vscode.window.showInformationMessage(message, ...actions);
 								}
-								const respondRequest = new RespondRequest();
-								const notifyResponse = new NotifyResponse();
-								notifyResponse.setAction(choice || '');
-								respondRequest.setResponse(notifyResponse);
-								respondRequest.setRequestid(result.getRequestid());
-								context.supervisor.notification.respond(respondRequest, context.supervisor.metadata, {
-									deadline: Date.now() + SupervisorConnection.deadlines.normal
-								}, (error, _) => {
-									if (!error) {
-										return
-									}
-									if (error.code !== grpc.status.DEADLINE_EXCEEDED) {
-										handleReject(error);
-									}
-								});
+								response.setAction(choice || '');
+							}
+
+							// we deletage to code cli
+							// it delegates to the proper window cli server
+							// based on VSCODE_IPC_HOOK_CLI env var
+							const open = request.getOpen();
+							if (open) {
+								let command = 'code ';
+								if (open.getAwait()) {
+									command += '--wait ';
+								}
+								command += open.getPathsList().join(' ');
+								await util.promisify(child_process.exec)(command);
+							}
+
+							const preview = request.getPreview();
+							if (preview) {
+								if (preview.getExternal()) {
+									await util.promisify(child_process.exec)('code --openExternal ' + preview.getUrl());
+								} else {
+									await openSimpleBrowser(preview.getUrl());
+								}
+							}
+						} catch (e) {
+							console.error('failed to process supervisor notificaiton:', e);
+						}
+
+						const respondRequest = new RespondRequest();
+						respondRequest.setResponse(response);
+						respondRequest.setRequestid(result.getRequestid());
+						context.supervisor.notification.respond(respondRequest, context.supervisor.metadata, {
+							deadline: Date.now() + SupervisorConnection.deadlines.normal
+						}, (error, _) => {
+							if (!error) {
+								return
+							}
+							if (error.code !== grpc.status.DEADLINE_EXCEEDED) {
+								handleReject(error);
 							}
 						});
 					});
-				} catch (err) {
-					if (isGRPCErrorStatus(err, grpc.status.UNIMPLEMENTED)) {
-						console.warn('supervisor does not implement the notification server');
-						run = false;
-					} else if (!isGRPCErrorStatus(err, grpc.status.CANCELLED)) {
-						console.error('cannot maintain connection to supervisor', err);
-					}
-				} finally {
-					stopUpdates = undefined;
-					events?.cancel()
+				});
+			} catch (err) {
+				if (isGRPCErrorStatus(err, grpc.status.UNIMPLEMENTED)) {
+					console.warn('supervisor does not implement the notification server');
+					run = false;
+				} else if (!isGRPCErrorStatus(err, grpc.status.CANCELLED)) {
+					console.error('cannot maintain connection to supervisor', err);
 				}
-				await new Promise(resolve => setTimeout(resolve, 1000));
+			} finally {
+				stopUpdates = undefined;
+				events?.cancel()
 			}
-		})();
-		return new vscode.Disposable(() => {
-			run = false;
-			if (stopUpdates) {
-				stopUpdates();
-			}
-		});
-	}
-	context.subscriptions.push(observeNotifications());
+			await new Promise(resolve => setTimeout(resolve, 1000));
+		}
+	})();
+	return new vscode.Disposable(() => {
+		run = false;
+		if (stopUpdates) {
+			stopUpdates();
+		}
+	});
 }
 
 export function registerDefaultLayout(context: GitpodExtensionContext): void {
@@ -576,10 +630,7 @@ function installCLIProxy(context: vscode.ExtensionContext, logger: Log): string 
 					// should be aligned with https://github.com/gitpod-io/vscode/blob/4d36a5dbf36870beda891e5dd94ccf087fdc7eb5/src/vs/workbench/api/node/extHostCLIServer.ts#L207-L207
 					try {
 						const { url } = data;
-						await vscode.commands.executeCommand('simpleBrowser.api.open', url, {
-							viewColumn: vscode.ViewColumn.Beside,
-							preserveFocus: true
-						});
+						await openSimpleBrowser(url);
 						res.writeHead(200, { 'content-type': 'application/json' });
 						res.end(JSON.stringify(''));
 					} catch (e) {
@@ -609,6 +660,13 @@ function installCLIProxy(context: vscode.ExtensionContext, logger: Log): string 
 	});
 
 	return ipcHookCli;
+}
+
+async function openSimpleBrowser(url: string): Promise<void> {
+	await vscode.commands.executeCommand('simpleBrowser.api.open', url, {
+		viewColumn: vscode.ViewColumn.Beside,
+		preserveFocus: true
+	});
 }
 
 type TerminalOpenMode = 'tab-before' | 'tab-after' | 'split-left' | 'split-right' | 'split-top' | 'split-bottom';

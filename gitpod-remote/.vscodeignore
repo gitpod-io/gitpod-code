@@ -1,4 +1,4 @@
-.gitignore
+gp .gitignore
 node_modules/
 src/**
 vscode.d.ts

@@ -31,7 +31,7 @@
   "dependencies": {
     "configcat-node": "^8.0.0",
     "@gitpod/gitpod-protocol": "main",
-    "@gitpod/supervisor-api-grpc": "ak-rebuild-debug",
+    "@gitpod/supervisor-api-grpc": "ak",
     "@vscode/codicons": "^0.0.31",
     "@vscode/webview-ui-toolkit": "^1.0.0",
     "bufferutil": "^4.0.1",

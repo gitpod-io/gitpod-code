@@ -34,10 +34,10 @@
     vscode-ws-jsonrpc "^0.2.0"
     ws "^7.4.6"
 
-"@gitpod/supervisor-api-grpc@ak-rebuild-debug":
-  version "0.1.5-ak-rebuild-debug.65"
-  resolved "https://registry.yarnpkg.com/@gitpod/supervisor-api-grpc/-/supervisor-api-grpc-0.1.5-ak-rebuild-debug.65.tgz#fe295c15a3b58d340d9111207c9eef1564bfff3c"
-  integrity sha512-tuR/kEalT4/02ZDuO9OgkVg54+Fw3ZIfaQHHyanEZq52tPgSW0/sezoPN0TAJxg+D8mbd1NsiDeQZx/0Xg7TGA==
+"@gitpod/supervisor-api-grpc@ak":
+  version "0.1.5-ak.100320231442"
+  resolved "https://registry.yarnpkg.com/@gitpod/supervisor-api-grpc/-/supervisor-api-grpc-0.1.5-ak.100320231442.tgz#27b1b36108b5f5a8ce7a578cd481ee7a787880bd"
+  integrity sha512-/mUvq8QVy6f4rP1hi6NH9Jba9wWXzX0c/a3KTl2LQb9Vkr+sbMDJZRnU1dgifYbdRRiXdVLRPReqbZXfnePQ/g==
   dependencies:
     "@grpc/grpc-js" "^1.3.7"
     google-protobuf "^3.19.1"
