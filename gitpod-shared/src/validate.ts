@@ -11,7 +11,7 @@ const ValidateAction = {
 	command: 'gitpod.gitpodyml.run',
 	title: 'Validate',
 	description: 'Validate the workspace configuration',
-	shellCommand: 'gp rebuild',
+	shellCommand: 'gp validate',
 
 	dockerfileCommand: 'gitpod.gitpodyml.dockerfile.run',
 	dockerfileEditorContextCommand: 'gitpod.gitpodyml.dockerfile.editorContext.run',
