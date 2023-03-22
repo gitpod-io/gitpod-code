@@ -7,8 +7,8 @@ import fetch, { Response } from 'node-fetch';
 import * as vscode from 'vscode';
 import { load } from 'js-yaml';
 import { CacheHelper } from './util/cache';
-import { Disposable, disposeAll } from './util/dispose';
-import { Log } from 'gitpod-shared';
+import { Disposable, disposeAll } from 'gitpod-shared';
+import { ILogService } from 'gitpod-shared';
 
 export class ReleaseNotes extends Disposable {
 	public static readonly viewType = 'gitpodReleaseNotes';
@@ -22,7 +22,7 @@ export class ReleaseNotes extends Disposable {
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
-		private readonly logger: Log,
+		private readonly logger: ILogService,
 	) {
 		super();
 

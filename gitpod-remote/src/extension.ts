@@ -6,7 +6,7 @@ import { GitpodExtensionContext, registerTasks, setupGitpodContext, registerIpcH
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { configureMachineSettings } from './machineSettings';
-import { registerPortCommands, tunnelPorts } from './ports';
+import { tunnelPorts } from './ports';
 import { GitpodPortViewProvider } from './portViewProvider';
 import { initializeRemoteExtensions, installInitialExtensions, ISyncExtension } from './remoteExtensionInit';
 
@@ -17,10 +17,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
+	registerCommands(gitpodContext);
 	registerTasks(gitpodContext);
 	installInitialExtensions(gitpodContext);
 
-	registerPortCommands(gitpodContext);
 	const portViewProvider = new GitpodPortViewProvider(gitpodContext);
 	context.subscriptions.push(vscode.window.registerWebviewViewProvider(GitpodPortViewProvider.viewType, portViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 
@@ -45,14 +45,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	// and gitpod.gitpod to disable auto tunneling from the current local machine.
 	vscode.commands.executeCommand('gitpod.api.autoTunnel', gitpodContext.info.gitpodHost, gitpodContext.info.instanceId, false);
 
-	// For collecting logs, will be called by gitpod-desktop extension;
-	context.subscriptions.push(vscode.commands.registerCommand('__gitpod.getGitpodRemoteLogsUri', () => {
-		return context.logUri;
-	}));
-
-	// Initialize remote extensions
-	context.subscriptions.push(vscode.commands.registerCommand('__gitpod.initializeRemoteExtensions', (extensions: ISyncExtension[]) => initializeRemoteExtensions(extensions, gitpodContext!)));
-
 	// TODO
 	// - auth?
 	// - .gitpod.yml validations
@@ -62,17 +54,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	await gitpodContext.active;
 }
 
-export function deactivate() {
-	if (!gitpodContext) {
-		return;
-	}
-	return gitpodContext.dispose();
+export async function deactivate() {
+	await gitpodContext?.dispose();
 }
 
 /**
  * configure CLI in regular terminals
  */
-export function registerCLI(context: GitpodExtensionContext): void {
+function registerCLI(context: GitpodExtensionContext): void {
 	context.environmentVariableCollection.replace('EDITOR', 'code');
 	context.environmentVariableCollection.replace('VISUAL', 'code');
 	context.environmentVariableCollection.replace('GP_OPEN_EDITOR', 'code');
@@ -85,4 +74,25 @@ export function registerCLI(context: GitpodExtensionContext): void {
 		return;
 	}
 	context.environmentVariableCollection.replace('GITPOD_REMOTE_CLI_IPC', ipcHookCli);
+}
+
+function registerCommands(context: GitpodExtensionContext) {
+	context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInBrowser', () => {
+		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_change_vscode_type', {
+			workspaceId: context.info.workspaceId,
+			instanceId: context.info.instanceId,
+			debugWorkspace: String(context.isDebugWorkspace()),
+			targetUiKind: 'web'
+		});
+		const url = context.info.workspaceUrl;
+		return vscode.env.openExternal(vscode.Uri.parse(url));
+	}));
+
+	// For collecting logs, will be called by gitpod-desktop extension;
+	context.subscriptions.push(vscode.commands.registerCommand('__gitpod.getGitpodRemoteLogsUri', () => {
+		return context.logUri;
+	}));
+
+	// Initialize remote extensions
+	context.subscriptions.push(vscode.commands.registerCommand('__gitpod.initializeRemoteExtensions', (extensions: ISyncExtension[]) => initializeRemoteExtensions(extensions, gitpodContext!)));
 }

@@ -3,7 +3,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { registerActiveLanguageAnalytics, registerUsageAnalytics } from './analytics';
+import { registerActiveLanguageAnalytics } from './analytics';
 import { createGitpodExtensionContext, registerDefaultLayout, registerNotifications, registerWorkspaceCommands, registerWorkspaceSharing, registerWorkspaceTimeout } from './features';
 import { ValidateService } from './validate';
 import { GitpodExtensionContext } from './gitpodContext';
@@ -12,15 +12,13 @@ export { GitpodExtensionContext } from './gitpodContext';
 export { registerTasks, registerIpcHookCli } from './features';
 
 export * from './common/utils';
-export { default as Log } from './common/logger';
+export * from './common/dispose';
+export { ILogService } from './logService';
+export { TelemetryService } from './telemetryService';
 export * from './gitpod-plugin-model';
 export * from './workspacePort';
 
 export async function setupGitpodContext(context: vscode.ExtensionContext): Promise<GitpodExtensionContext | undefined> {
-	if (typeof vscode.env.remoteName === 'undefined' || context.extension.extensionKind !== vscode.ExtensionKind.Workspace) {
-		return undefined;
-	}
-
 	const gitpodContext = await createGitpodExtensionContext(context);
 	vscode.commands.executeCommand('setContext', 'gitpod.inWorkspace', !!gitpodContext);
 	if (!gitpodContext) {
@@ -32,7 +30,13 @@ export async function setupGitpodContext(context: vscode.ExtensionContext): Prom
 	vscode.commands.executeCommand('setContext', 'gitpod.ideAlias', gitpodContext.info.ideAlias);
 	vscode.commands.executeCommand('setContext', 'gitpod.UIKind', vscode.env.uiKind === vscode.UIKind.Web ? 'web' : 'desktop');
 
-	registerUsageAnalytics(gitpodContext);
+	gitpodContext.telemetryService.sendTelemetryEvent('vscode_session', {
+		workspaceId: gitpodContext.info.workspaceId,
+		instanceId: gitpodContext.info.instanceId,
+		debugWorkspace: String(gitpodContext.isDebugWorkspace())
+	});
+
+
 	registerActiveLanguageAnalytics(gitpodContext);
 	registerWorkspaceCommands(gitpodContext);
 	registerWorkspaceSharing(gitpodContext);

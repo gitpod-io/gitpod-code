@@ -15,14 +15,12 @@ import { TokenServiceClient } from '@gitpod/supervisor-api-grpc/lib/token_grpc_p
 import { PortVisibility } from '@gitpod/gitpod-protocol/lib/workspace-instance';
 import { ControlServiceClient } from '@gitpod/supervisor-api-grpc/lib/control_grpc_pb';
 import { InfoServiceClient } from '@gitpod/supervisor-api-grpc/lib/info_grpc_pb';
-import { BaseGitpodAnalyticsEventPropeties, GitpodAnalyticsEvent } from './analytics';
 import * as uuid from 'uuid';
-import { RemoteTrackMessage } from '@gitpod/gitpod-protocol/lib/analytics';
 import { CloseTunnelRequest, RetryAutoExposeRequest, TunnelPortRequest, TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
 import { DebugWorkspaceType, WorkspaceInfoRequest, WorkspaceInfoResponse } from '@gitpod/supervisor-api-grpc/lib/info_pb';
 import { User } from '@gitpod/gitpod-protocol/lib/protocol';
 import ReconnectingWebSocket from 'reconnecting-websocket';
-import Log from './common/logger';
+import { ILogService } from './logService';
 import { GitpodYml } from './gitpodYaml';
 import * as path from 'path';
 import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';
@@ -30,6 +28,7 @@ import { PortsStatusRequest, PortsStatusResponse, PortsStatus } from '@gitpod/su
 import { isGRPCErrorStatus } from './common/utils';
 import { ExposePortRequest } from '@gitpod/supervisor-api-grpc/lib/control_pb';
 import { ExperimentalSettings } from './experiments';
+import { TelemetryService } from './telemetryService';
 
 // Important:
 // This class should performs all supervisor API calls used outside this module.
@@ -60,7 +59,7 @@ export class SupervisorConnection {
 
 	constructor(
 		private context: vscode.ExtensionContext,
-		private logger: Log
+		private logger: ILogService
 	) {
 		this.clientOptions = {
 			'grpc.primary_user_agent': `${vscode.env.appName}/${vscode.version} ${context.extension.id}/${context.extension.packageJSON.version}`,
@@ -199,6 +198,7 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 	readonly workspaceContextUrl: vscode.Uri;
 
 	public readonly gitpodYml: GitpodYml;
+	public readonly telemetryService: TelemetryService
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
@@ -212,7 +212,7 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		readonly userTeams: Promise<Team[]>,
 		readonly instanceListener: Promise<WorkspaceInstanceUpdateListener>,
 		readonly workspaceOwned: Promise<boolean>,
-		readonly logger: Log,
+		readonly logger: ILogService,
 		readonly ipcHookCli: string | undefined,
 		readonly experiments: ExperimentalSettings
 	) {
@@ -221,6 +221,10 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		const gitpodFileUri = vscode.Uri.file(path.join(info.checkoutLocation, '.gitpod.yml'));
 		this.gitpodYml = new GitpodYml(gitpodFileUri);
 		this.context.subscriptions.push(this.gitpodYml);
+
+		const extensionId = context.extension.id;
+		const packageJSON = context.extension.packageJSON;
+		this.telemetryService = new TelemetryService(extensionId, packageJSON.version, packageJSON.segmentKey);
 	}
 
 	get active() {
@@ -280,53 +284,19 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		return (this.context as any).extensionRuntime;
 	}
 
-	dispose() {
-		const pendingWebSocket = this.webSocket;
-		if (!pendingWebSocket) {
+	async dispose() {
+		await this.telemetryService.dispose();
+
+		if (!this.webSocket) {
 			return;
 		}
-		return (async () => {
-			try {
-				const webSocket = await pendingWebSocket;
-				await Promise.allSettled(this.pendingWillCloseSocket.map(f => f()));
-				webSocket.close();
-			} catch (e) {
-				this.logger.error('failed to dispose context:', e);
-				console.error('failed to dispose context:', e);
-			}
-		})();
-	}
-
-	async fireAnalyticsEvent({ eventName, properties }: GitpodAnalyticsEvent): Promise<void> {
-		const baseProperties: BaseGitpodAnalyticsEventPropeties = {
-			sessionId: this.sessionId,
-			workspaceId: this.info.workspaceId,
-			instanceId: this.info.instanceId,
-			debugWorkspace: typeof this.info.debugWorkspaceType !== 'undefined' ? this.info.debugWorkspaceType > DebugWorkspaceType.NODEBUG : false,
-			appName: vscode.env.appName,
-			uiKind: vscode.env.uiKind === vscode.UIKind.Web ? 'web' : 'desktop',
-			devMode: this.devMode,
-			version: vscode.version,
-			timestamp: Date.now(),
-			'common.extname': this.extension.id,
-			'common.extversion': this.extension.packageJSON.version
-		};
-		const msg: RemoteTrackMessage = {
-			event: eventName,
-			properties: {
-				...baseProperties,
-				...properties,
-			}
-		};
-		if (this.devMode && vscode.env.uiKind === vscode.UIKind.Web) {
-			this.logger.trace(`ANALYTICS: ${JSON.stringify(msg)} `);
-			return Promise.resolve();
-		}
 		try {
-			await this.gitpod.server.trackEvent(msg);
+			const ws = await this.webSocket;
+			await Promise.allSettled(this.pendingWillCloseSocket.map(f => f()));
+			ws.close();
 		} catch (e) {
-			this.logger.error('failed to track event:', e);
-			console.error('failed to track event:', e);
+			this.logger.error('failed to dispose context:', e);
+			console.error('failed to dispose context:', e);
 		}
 	}
 
@@ -335,5 +305,9 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 			port,
 			visibility
 		});
+	}
+
+	isDebugWorkspace() {
+		return this.info.debugWorkspaceType > DebugWorkspaceType.NODEBUG;
 	}
 }

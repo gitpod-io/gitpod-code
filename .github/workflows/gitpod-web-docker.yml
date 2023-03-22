@@ -23,18 +23,31 @@ jobs:
           node-version: 16
           cache: 'yarn'
           cache-dependency-path: '**/yarn.lock'
+
       - name: Execute yarn
         run: |
           yarn --frozen-lockfile
+
+      - name: Update Segment
+        working-directory: ./gitpod-web
+        run: |
+          set -e
+          setSegmentKey="setpath([\"segmentKey\"]; \"${{ secrets.ANALITYCS_KEY }}\")"
+          jqCommands="${setSegmentKey}"
+          cat package.json | jq "${jqCommands}" > package.json.tmp
+          mv package.json.tmp package.json
+
       - name: Build
         run: |
           yarn run build:gitpod-web
+
       - name: Docker build and push
         uses: docker/build-push-action@v3
         with:
           push: true
           context: gitpod-web
           tags: eu.gcr.io/gitpod-core-dev/build/ide/gitpod-code-web:commit-${{ github.sha }}
+
       - name: Output the image tag to the GitHub Summary
         run: |
           echo "Successfully built the \`gitpod-web\` extension with the tag:" >> summary.md
