@@ -440,9 +440,7 @@ function registerCommands(context: GitpodExtensionContext) {
 	}
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInStable', () => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_change_vscode_type', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			targetUiKind: 'desktop',
 			targetQualifier: 'stable'
 		});
@@ -451,9 +449,7 @@ function registerCommands(context: GitpodExtensionContext) {
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInInsiders', () => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_change_vscode_type', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			targetUiKind: 'desktop',
 			targetQualifier: 'insiders'
 		});

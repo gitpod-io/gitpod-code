@@ -30,27 +30,21 @@ export class GitpodPortViewProvider implements vscode.WebviewViewProvider {
 	constructor(private readonly context: GitpodExtensionContext) {
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makePrivate', ({ port }: PortItem) => {
 			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
-				workspaceId: context.info.workspaceId,
-				instanceId: context.info.instanceId,
-				debugWorkspace: String(context.isDebugWorkspace()),
+				...context.getWorkspaceTelemetryProperties(),
 				action: 'private'
 			});
 			context.setPortVisibility(port.status.localPort, 'private');
 		}));
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makePublic', ({ port }: PortItem) => {
 			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
-				workspaceId: context.info.workspaceId,
-				instanceId: context.info.instanceId,
-				debugWorkspace: String(context.isDebugWorkspace()),
+				...context.getWorkspaceTelemetryProperties(),
 				action: 'public'
 			});
 			context.setPortVisibility(port.status.localPort, 'public');
 		}));
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.preview', ({ port }: PortItem) => {
 			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
-				workspaceId: context.info.workspaceId,
-				instanceId: context.info.instanceId,
-				debugWorkspace: String(context.isDebugWorkspace()),
+				...context.getWorkspaceTelemetryProperties(),
 				action: 'preview'
 			});
 			vscode.commands.executeCommand('simpleBrowser.api.open', port.externalUrl.toString(), {
@@ -60,9 +54,7 @@ export class GitpodPortViewProvider implements vscode.WebviewViewProvider {
 		}));
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.openBrowser', ({ port }: PortItem) => {
 			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
-				workspaceId: context.info.workspaceId,
-				instanceId: context.info.instanceId,
-				debugWorkspace: String(context.isDebugWorkspace()),
+				...context.getWorkspaceTelemetryProperties(),
 				action: 'openBrowser'
 			});
 			vscode.env.openExternal(vscode.Uri.parse(port.localUrl));
@@ -174,9 +166,7 @@ export class GitpodPortViewProvider implements vscode.WebviewViewProvider {
 			if (message.command === 'urlCopy' && port.status.exposed) {
 				await vscode.env.clipboard.writeText(port.status.exposed.url);
 				this.context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
-					workspaceId: this.context.info.workspaceId,
-					instanceId: this.context.info.instanceId,
-					debugWorkspace: String(this.context.isDebugWorkspace()),
+					...this.context.getWorkspaceTelemetryProperties(),
 					action: 'urlCopy'
 				});
 				return;

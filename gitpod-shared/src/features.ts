@@ -136,9 +136,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.dashboard', () => {
 		const url = context.info.gitpodHost;
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
@@ -146,9 +144,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.accessControl', () => {
 		const url = new GitpodHostUrl(context.info.gitpodHost).asAccessControl().toString();
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
@@ -156,9 +152,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.settings', () => {
 		const url = new GitpodHostUrl(context.info.gitpodHost).asSettings().toString();
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
@@ -166,9 +160,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.context', () => {
 		const url = context.workspaceContextUrl.toString();
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
@@ -176,9 +168,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.documentation', () => {
 		const url = 'https://www.gitpod.io/docs';
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
@@ -186,9 +176,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.twitter', () => {
 		const url = 'https://twitter.com/gitpod';
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
@@ -196,9 +184,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.discord', () => {
 		const url = 'https://www.gitpod.io/chat';
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
@@ -206,9 +192,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.reportIssue', () => {
 		const url = 'https://github.com/gitpod-io/gitpod/issues/new/choose';
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
@@ -220,9 +204,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	}
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.stop.ws', () => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_workspace', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			action: 'stop'
 		});
 		return context.gitpod.server.stopWorkspace(context.info.workspaceId);
@@ -230,18 +212,14 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.upgradeSubscription', () => {
 		const url = new GitpodHostUrl(context.info.gitpodHost).asBilling().toString();
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			url
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.takeSnapshot', async () => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_workspace', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			action: 'snapshot'
 		});
 		try {
@@ -352,18 +330,14 @@ export async function registerWorkspaceSharing(context: GitpodExtensionContext):
 	}
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.shareWorkspace', () => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_workspace', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			action: 'share'
 		});
 		return controlAdmission('everyone');
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.stopSharingWorkspace', () => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_workspace', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			action: 'stop-sharing'
 		});
 		return controlAdmission('owner');
@@ -378,9 +352,7 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ExtendTimeout', async () => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_workspace', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			action: 'extend-timeout'
 		});
 		try {
@@ -401,9 +373,7 @@ export async function registerWorkspaceTimeout(context: GitpodExtensionContext):
 			return;
 		}
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_workspace', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			action: 'configure-timeout'
 		});
 		try {

@@ -310,4 +310,12 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 	isDebugWorkspace() {
 		return this.info.debugWorkspaceType > DebugWorkspaceType.NODEBUG;
 	}
+
+	getWorkspaceTelemetryProperties() {
+		return {
+			workspaceId: this.info.workspaceId,
+			instanceId: this.info.instanceId,
+			debugWorkspace: String(this.isDebugWorkspace()),
+		}
+	}
 }

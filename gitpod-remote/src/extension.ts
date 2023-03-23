@@ -79,9 +79,7 @@ function registerCLI(context: GitpodExtensionContext): void {
 function registerCommands(context: GitpodExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInBrowser', () => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_change_vscode_type', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			targetUiKind: 'web'
 		});
 		const url = context.info.workspaceUrl;

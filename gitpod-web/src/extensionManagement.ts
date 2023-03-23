@@ -160,9 +160,7 @@ async function validateExtensions(extensionsToValidate: { id: string; version?: 
 export function registerExtensionManagement(context: GitpodExtensionContext): void {
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.extensions.addToConfig', async (id: string) => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_config', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			action: 'add'
 		});
 		const yaml = await context.gitpodYml.getYaml();
@@ -171,9 +169,7 @@ export function registerExtensionManagement(context: GitpodExtensionContext): vo
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.extensions.removeFromConfig', async (id: string) => {
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_config', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			action: 'remove'
 		});
 		const yaml = await context.gitpodYml.getYaml();

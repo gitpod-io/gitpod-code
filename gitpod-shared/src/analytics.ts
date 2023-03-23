@@ -17,9 +17,7 @@ export function registerActiveLanguageAnalytics(context: GitpodExtensionContext)
 		activeLanguages.add(lang);
 		const ext = path.extname(e.document.uri.path) || '';
 		context.telemetryService.sendTelemetryEvent('vscode_active_language', {
-			workspaceId: context.info.workspaceId,
-			instanceId: context.info.instanceId,
-			debugWorkspace: String(context.isDebugWorkspace()),
+			...context.getWorkspaceTelemetryProperties(),
 			lang,
 			ext
 		});

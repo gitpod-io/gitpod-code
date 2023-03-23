@@ -152,9 +152,7 @@ export class ValidateService extends vscode.Disposable {
 
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.command, async () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'run',
 				location: 'codelens',
 				source: 'gitpodYml'
@@ -163,9 +161,7 @@ export class ValidateService extends vscode.Disposable {
 		}));
 		this.disposables.push(vscode.commands.registerCommand(LearnAction.command, () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'learn',
 				location: 'codelens',
 				source: 'gitpodYml'
@@ -174,9 +170,7 @@ export class ValidateService extends vscode.Disposable {
 		}));
 		this.disposables.push(vscode.commands.registerCommand(FeedbackAction.command, () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'feedback',
 				location: 'codelens',
 				source: 'gitpodYml'
@@ -187,9 +181,7 @@ export class ValidateService extends vscode.Disposable {
 		// Duplicate commands just for analytics
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.dockerfileCommand, async () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'run',
 				location: 'codelens',
 				source: 'dockerfile'
@@ -198,9 +190,7 @@ export class ValidateService extends vscode.Disposable {
 		}));
 		this.disposables.push(vscode.commands.registerCommand(LearnAction.dockerfileCommand, () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'learn',
 				location: 'codelens',
 				source: 'dockerfile'
@@ -209,9 +199,7 @@ export class ValidateService extends vscode.Disposable {
 		}));
 		this.disposables.push(vscode.commands.registerCommand(FeedbackAction.dockerfileCommand, () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'feedback',
 				location: 'codelens',
 				source: 'dockerfile'
@@ -220,9 +208,7 @@ export class ValidateService extends vscode.Disposable {
 		}));
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.editorContextCommand, async () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'run',
 				location: 'editorContext',
 				source: 'gitpodYml'
@@ -231,9 +217,7 @@ export class ValidateService extends vscode.Disposable {
 		}));
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.dockerfileEditorContextCommand, async () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'run',
 				location: 'editorContext',
 				source: 'dockerfile'
@@ -242,9 +226,7 @@ export class ValidateService extends vscode.Disposable {
 		}));
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.editorTitleCommand, async () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'run',
 				location: 'editorTitle',
 				source: 'gitpodYml'
@@ -253,9 +235,7 @@ export class ValidateService extends vscode.Disposable {
 		}));
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.dockerfileEditorTitleCommand, async () => {
 			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-				workspaceId: this.context.info.workspaceId,
-				instanceId: this.context.info.instanceId,
-				debugWorkspace: String(this.context.isDebugWorkspace()),
+				...this.context.getWorkspaceTelemetryProperties(),
 				action: 'run',
 				location: 'editorTitle',
 				source: 'dockerfile'
@@ -312,9 +292,7 @@ export class ValidateService extends vscode.Disposable {
 		} finally {
 			if (action) {
 				this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
-					workspaceId: this.context.info.workspaceId,
-					instanceId: this.context.info.instanceId,
-					debugWorkspace: String(this.context.isDebugWorkspace()),
+					...this.context.getWorkspaceTelemetryProperties(),
 					action,
 					location: 'notification',
 					source

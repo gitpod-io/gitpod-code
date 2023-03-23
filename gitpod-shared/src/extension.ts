@@ -31,9 +31,7 @@ export async function setupGitpodContext(context: vscode.ExtensionContext): Prom
 	vscode.commands.executeCommand('setContext', 'gitpod.UIKind', vscode.env.uiKind === vscode.UIKind.Web ? 'web' : 'desktop');
 
 	gitpodContext.telemetryService.sendTelemetryEvent('vscode_session', {
-		workspaceId: gitpodContext.info.workspaceId,
-		instanceId: gitpodContext.info.instanceId,
-		debugWorkspace: String(gitpodContext.isDebugWorkspace())
+		...gitpodContext.getWorkspaceTelemetryProperties(),
 	});
 
 
