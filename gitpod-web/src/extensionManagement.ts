@@ -159,18 +159,18 @@ async function validateExtensions(extensionsToValidate: { id: string; version?: 
 
 export function registerExtensionManagement(context: GitpodExtensionContext): void {
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.extensions.addToConfig', async (id: string) => {
-		context.fireAnalyticsEvent({
-			eventName: 'vscode_execute_command_gitpod_config',
-			properties: { action: 'add' }
+		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_config', {
+			...context.getWorkspaceTelemetryProperties(),
+			action: 'add'
 		});
 		const yaml = await context.gitpodYml.getYaml();
 		yaml.add(id);
 		await context.gitpodYml.writeContent(yaml.toString());
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.extensions.removeFromConfig', async (id: string) => {
-		context.fireAnalyticsEvent({
-			eventName: 'vscode_execute_command_gitpod_config',
-			properties: { action: 'remove' }
+		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_config', {
+			...context.getWorkspaceTelemetryProperties(),
+			action: 'remove'
 		});
 		const yaml = await context.gitpodYml.getYaml();
 		yaml.remove(id);

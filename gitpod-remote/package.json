@@ -36,6 +36,7 @@
     "*"
   ],
   "main": "./out/extension.js",
+  "segmentKey": "YErmvd89wPsrCuGcVnF2XAl846W9WIGl",
   "contributes": {
     "commands": [
       {

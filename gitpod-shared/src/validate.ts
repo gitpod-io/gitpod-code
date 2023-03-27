@@ -5,7 +5,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { GitpodExtensionContext } from './gitpodContext';
-import { GitpodValidateAnalytics } from './analytics';
 
 const ValidateAction = {
 	command: 'gitpod.gitpodyml.run',
@@ -152,114 +151,94 @@ export class ValidateService extends vscode.Disposable {
 		this.disposables.push(vscode.languages.registerCodeLensProvider({ language: 'dockerfile' }, this.codelensProvider));
 
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.command, async () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'run',
-					location: 'codelens',
-					source: 'gitpodYml'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'run',
+				location: 'codelens',
+				source: 'gitpodYml'
 			});
 			await this.validate();
 		}));
 		this.disposables.push(vscode.commands.registerCommand(LearnAction.command, () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'learn',
-					location: 'codelens',
-					source: 'gitpodYml'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'learn',
+				location: 'codelens',
+				source: 'gitpodYml'
 			});
 			return vscode.env.openExternal(vscode.Uri.parse(LearnAction.url));
 		}));
 		this.disposables.push(vscode.commands.registerCommand(FeedbackAction.command, () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'feedback',
-					location: 'codelens',
-					source: 'gitpodYml'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'feedback',
+				location: 'codelens',
+				source: 'gitpodYml'
 			});
 			return vscode.env.openExternal(vscode.Uri.parse(FeedbackAction.url));
 		}));
 
 		// Duplicate commands just for analytics
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.dockerfileCommand, async () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'run',
-					location: 'codelens',
-					source: 'dockerfile'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'run',
+				location: 'codelens',
+				source: 'dockerfile'
 			});
 			await this.validate();
 		}));
 		this.disposables.push(vscode.commands.registerCommand(LearnAction.dockerfileCommand, () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'learn',
-					location: 'codelens',
-					source: 'dockerfile'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'learn',
+				location: 'codelens',
+				source: 'dockerfile'
 			});
 			return vscode.env.openExternal(vscode.Uri.parse(LearnAction.url));
 		}));
 		this.disposables.push(vscode.commands.registerCommand(FeedbackAction.dockerfileCommand, () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'feedback',
-					location: 'codelens',
-					source: 'dockerfile'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'feedback',
+				location: 'codelens',
+				source: 'dockerfile'
 			});
 			return vscode.env.openExternal(vscode.Uri.parse(FeedbackAction.url));
 		}));
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.editorContextCommand, async () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'run',
-					location: 'editorContext',
-					source: 'gitpodYml'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'run',
+				location: 'editorContext',
+				source: 'gitpodYml'
 			});
 			await this.validate();
 		}));
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.dockerfileEditorContextCommand, async () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'run',
-					location: 'editorContext',
-					source: 'dockerfile'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'run',
+				location: 'editorContext',
+				source: 'dockerfile'
 			});
 			await this.validate();
 		}));
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.editorTitleCommand, async () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'run',
-					location: 'editorTitle',
-					source: 'gitpodYml'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'run',
+				location: 'editorTitle',
+				source: 'gitpodYml'
 			});
 			await this.validate();
 		}));
 		this.disposables.push(vscode.commands.registerCommand(ValidateAction.dockerfileEditorTitleCommand, async () => {
-			this.context.fireAnalyticsEvent({
-				eventName: 'vscode_validate',
-				properties: {
-					action: 'run',
-					location: 'editorTitle',
-					source: 'dockerfile'
-				}
+			this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+				...this.context.getWorkspaceTelemetryProperties(),
+				action: 'run',
+				location: 'editorTitle',
+				source: 'dockerfile'
 			});
 			await this.validate();
 		}));
@@ -278,13 +257,13 @@ export class ValidateService extends vscode.Disposable {
 	}
 
 	private notifyInProgress = false;
-	private async notify(source: GitpodValidateAnalytics['properties']['source']) {
+	private async notify(source: 'gitpodYml' | 'dockerfile') {
 		const config = vscode.workspace.getConfiguration('gitpod');
 		if (config.get<boolean>('validate.neverPrompt', false) || this.notifyInProgress) {
 			return;
 		}
 		this.notifyInProgress = true;
-		let action: GitpodValidateAnalytics['properties']['action'] | undefined;
+		let action:  'run' | 'feedback' | 'learn' | 'cancel' | 'neverAgain' | undefined;
 		try {
 			const validate = "Validate";
 			const learn = "Learn More";
@@ -312,13 +291,11 @@ export class ValidateService extends vscode.Disposable {
 			this.context.logger.error("validate: failed to notify;", e);
 		} finally {
 			if (action) {
-				this.context.fireAnalyticsEvent({
-					eventName: 'vscode_validate',
-					properties: {
-						action,
-						location: 'notification',
-						source
-					}
+				this.context.telemetryService.sendTelemetryEvent('vscode_validate', {
+					...this.context.getWorkspaceTelemetryProperties(),
+					action,
+					location: 'notification',
+					source
 				});
 			}
 			this.notifyInProgress = false;

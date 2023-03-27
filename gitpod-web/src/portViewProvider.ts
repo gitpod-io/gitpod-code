@@ -4,10 +4,13 @@
 import * as vscode from 'vscode';
 import { GitpodExtensionContext, ExposedServedGitpodWorkspacePort, GitpodWorkspacePort, isExposedServedGitpodWorkspacePort, isExposedServedPort, PortInfo } from 'gitpod-shared';
 import { PortsStatus } from '@gitpod/supervisor-api-grpc/lib/status_pb';
+import { TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
 
 const PortCommands = <const>['tunnelNetwork', 'tunnelHost', 'makePublic', 'makePrivate', 'preview', 'openBrowser', 'retryAutoExpose', 'urlCopy', 'queryPortData'];
 
 type PortCommand = typeof PortCommands[number];
+
+interface PortItem { port: GitpodWorkspacePort }
 
 export class GitpodPortViewProvider implements vscode.WebviewViewProvider {
 	public static readonly viewType = 'gitpod.portsView';
@@ -24,7 +27,48 @@ export class GitpodPortViewProvider implements vscode.WebviewViewProvider {
 	private readonly onDidChangePortsEmitter = new vscode.EventEmitter<Map<number, GitpodWorkspacePort>>();
 	readonly onDidChangePorts = this.onDidChangePortsEmitter.event;
 
-	constructor(private readonly context: GitpodExtensionContext) { }
+	constructor(private readonly context: GitpodExtensionContext) {
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makePrivate', ({ port }: PortItem) => {
+			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
+				...context.getWorkspaceTelemetryProperties(),
+				action: 'private'
+			});
+			context.setPortVisibility(port.status.localPort, 'private');
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makePublic', ({ port }: PortItem) => {
+			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
+				...context.getWorkspaceTelemetryProperties(),
+				action: 'public'
+			});
+			context.setPortVisibility(port.status.localPort, 'public');
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.preview', ({ port }: PortItem) => {
+			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
+				...context.getWorkspaceTelemetryProperties(),
+				action: 'preview'
+			});
+			vscode.commands.executeCommand('simpleBrowser.api.open', port.externalUrl.toString(), {
+				viewColumn: vscode.ViewColumn.Beside,
+				preserveFocus: true
+			});
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.openBrowser', ({ port }: PortItem) => {
+			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
+				...context.getWorkspaceTelemetryProperties(),
+				action: 'openBrowser'
+			});
+			vscode.env.openExternal(vscode.Uri.parse(port.localUrl));
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.tunnelNetwork', ({ port }: PortItem) => {
+			context.supervisor.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.NETWORK);
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.tunnelHost', async ({ port }: PortItem) =>
+			context.supervisor.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.HOST)
+		));
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.retryAutoExpose', ({ port }: PortItem) => {
+			context.supervisor.retryAutoExposePort(port.portNumber);
+		}));
+	}
 
 	// @ts-ignore
 	resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext<unknown>, token: vscode.CancellationToken): void | Thenable<void> {
@@ -121,9 +165,9 @@ export class GitpodPortViewProvider implements vscode.WebviewViewProvider {
 			if (!port) { return; }
 			if (message.command === 'urlCopy' && port.status.exposed) {
 				await vscode.env.clipboard.writeText(port.status.exposed.url);
-				this.context.fireAnalyticsEvent({
-					eventName: 'vscode_execute_command_gitpod_ports',
-					properties: { action: 'urlCopy' }
+				this.context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
+					...this.context.getWorkspaceTelemetryProperties(),
+					action: 'urlCopy'
 				});
 				return;
 			}

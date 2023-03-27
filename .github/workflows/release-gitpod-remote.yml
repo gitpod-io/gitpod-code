@@ -17,6 +17,15 @@ jobs:
         run: |
           yarn install --frozen-lockfile
 
+      - name: Update Segment
+        working-directory: ./gitpod-remote
+        run: |
+          set -e
+          setSegmentKey="setpath([\"segmentKey\"]; \"${{ secrets.ANALITYCS_KEY }}\")"
+          jqCommands="${setSegmentKey}"
+          cat package.json | jq "${jqCommands}" > package.json.tmp
+          mv package.json.tmp package.json
+
       - name: Package extension
         id: package_vsix
         run: |

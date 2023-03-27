@@ -4,7 +4,6 @@
 
 import { GitpodExtensionContext, setupGitpodContext, registerTasks, registerIpcHookCli, ExposedServedGitpodWorkspacePort, GitpodWorkspacePort, isExposedServedGitpodWorkspacePort } from 'gitpod-shared';
 import { PortsStatus, PortVisibility } from '@gitpod/supervisor-api-grpc/lib/status_pb';
-import { TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
 import type * as keytarType from 'keytar';
 import fetch from 'node-fetch';
 import * as vscode from 'vscode';
@@ -22,6 +21,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.globalState.setKeysForSync([WELCOME_WALKTROUGH_KEY, ReleaseNotes.RELEASE_NOTES_LAST_READ_KEY]);
 
+	registerCommands(gitpodContext);
 	registerDesktop();
 	registerAuth(gitpodContext);
 	registerPorts(gitpodContext);
@@ -42,11 +42,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	await gitpodContext.active;
 }
 
-export function deactivate() {
-	if (!gitpodContext) {
-		return;
-	}
-	return gitpodContext.dispose();
+export async function deactivate() {
+	await gitpodContext?.dispose();
 }
 
 function registerAuth(context: GitpodExtensionContext): void {
@@ -223,8 +220,6 @@ function registerAuth(context: GitpodExtensionContext): void {
 	})());
 }
 
-interface PortItem { port: GitpodWorkspacePort }
-
 async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 	const portMap = new Map<number, GitpodWorkspacePort>();
 	const tunnelMap = new Map<number, vscode.TunnelDescription>();
@@ -271,43 +266,6 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 				reject(e);
 			}
 		});
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makePrivate', ({ port }: PortItem) => {
-		context.fireAnalyticsEvent({
-			eventName: 'vscode_execute_command_gitpod_ports',
-			properties: { action: 'private' }
-		});
-		gitpodContext?.setPortVisibility(port.status.localPort, 'private');
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makePublic', ({ port }: PortItem) => {
-		context.fireAnalyticsEvent({
-			eventName: 'vscode_execute_command_gitpod_ports',
-			properties: { action: 'public' }
-		});
-		gitpodContext?.setPortVisibility(port.status.localPort, 'public');
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.tunnelNetwork', ({ port }: PortItem) => {
-		gitpodContext?.supervisor.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.NETWORK);
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.tunnelHost', async ({ port }: PortItem) =>
-		gitpodContext?.supervisor.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.HOST)
-	));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.preview', ({ port }: PortItem) => {
-		context.fireAnalyticsEvent({
-			eventName: 'vscode_execute_command_gitpod_ports',
-			properties: { action: 'preview' }
-		});
-		return openPreview(port);
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.openBrowser', ({ port }: PortItem) => {
-		context.fireAnalyticsEvent({
-			eventName: 'vscode_execute_command_gitpod_ports',
-			properties: { action: 'openBrowser' }
-		});
-		return openExternal(port);
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.retryAutoExpose', ({ port }: PortItem) => {
-		context.supervisor.retryAutoExposePort(port.portNumber);
 	}));
 
 	const portsStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
@@ -463,6 +421,40 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 		}
 	}));
 	vscode.commands.executeCommand('setContext', 'gitpod.portsView.visible', true);
+}
+
+function registerCommands(context: GitpodExtensionContext) {
+	function openDesktop(scheme: 'vscode' | 'vscode-insiders'): void {
+		const uri = vscode.workspace.workspaceFile || vscode.workspace.workspaceFolders?.[0]?.uri;
+		vscode.commands.executeCommand('gitpod.api.openDesktop', vscode.Uri.from({
+			scheme,
+			authority: 'gitpod.gitpod-desktop',
+			path: uri?.path || context.info.workspaceLocationFile || context.info.workspaceLocationFolder || context.info.checkoutLocation,
+			query: JSON.stringify({
+				instanceId: context.info.instanceId,
+				workspaceId: context.info.workspaceId,
+				gitpodHost: context.info.gitpodHost,
+				debugWorkspace: context.isDebugWorkspace()
+			})
+		}).toString());
+	}
+	context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInStable', () => {
+		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_change_vscode_type', {
+			...context.getWorkspaceTelemetryProperties(),
+			targetUiKind: 'desktop',
+			targetQualifier: 'stable'
+		});
+
+		return openDesktop('vscode');
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInInsiders', () => {
+		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_change_vscode_type', {
+			...context.getWorkspaceTelemetryProperties(),
+			targetUiKind: 'desktop',
+			targetQualifier: 'insiders'
+		});
+		return openDesktop('vscode-insiders');
+	}));
 }
 
 async function registerDesktop(): Promise<void> {

@@ -5,7 +5,7 @@
 import * as vscode from 'vscode';
 import * as configcat from 'configcat-node';
 import * as configcatcommon from 'configcat-common';
-import Log from './common/logger';
+import { ILogService} from './logService';
 import { URL } from 'url';
 import { Team, User } from '@gitpod/gitpod-protocol';
 
@@ -19,7 +19,7 @@ export class ExperimentalSettings {
 	constructor(
 		key: string,
 		context: vscode.ExtensionContext,
-		private logger: Log,
+		private logger: ILogService,
 		gitpodHost: string,
 		private readonly pendingOwner: Promise<User>,
 		private readonly pendingTeams: Promise<Team[]>,
