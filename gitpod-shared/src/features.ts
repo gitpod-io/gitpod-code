@@ -322,7 +322,11 @@ export async function registerWorkspaceSharing(context: GitpodExtensionContext):
 		} catch (err) {
 			console.error('cannot controlAdmission', err);
 			if (level === 'everyone') {
-				await vscode.window.showErrorMessage(`Cannot share workspace: ${err.toString()}`);
+				if (err?.code === ErrorCodes.PERMISSION_DENIED) {
+					await vscode.window.showErrorMessage(`Cannot share workspace: ${err.toString()} See [documentation](https://www.gitpod.io/docs/configure/orgs/policies)`)
+				} else {
+					await vscode.window.showErrorMessage(`Cannot share workspace: ${err.toString()}`);
+				}
 			} else {
 				await vscode.window.showInformationMessage(`Cannot stop workspace sharing: ${err.toString()}`);
 			}
