@@ -30,7 +30,7 @@ const LearnAction = {
 	command: 'gitpod.gitpodyml.learn',
 	title: 'Learn More',
 	description: 'Learn more about configuring a Gitpod workspace',
-	url: 'https://www.gitpod.io/docs/references/gitpod-yml',
+	url: 'https://www.gitpod.io/docs/configure/workspaces',
 
 	dockerfileCommand: 'gitpod.gitpodyml.dockerfile.learn',
 };
