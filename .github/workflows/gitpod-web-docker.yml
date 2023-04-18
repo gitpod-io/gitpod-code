@@ -32,7 +32,7 @@ jobs:
         working-directory: ./gitpod-web
         run: |
           set -e
-          setSegmentKey="setpath([\"segmentKey\"]; \"${{ secrets.ANALITYCS_KEY }}\")"
+          setSegmentKey="setpath([\"segmentKey\"]; \"untrusted-dummy-key\")"
           jqCommands="${setSegmentKey}"
           cat package.json | jq "${jqCommands}" > package.json.tmp
           mv package.json.tmp package.json

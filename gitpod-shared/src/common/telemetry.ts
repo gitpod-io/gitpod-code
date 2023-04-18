@@ -15,6 +15,10 @@ const enum TelemetryLevel {
 }
 
 function getTelemetryLevel(): TelemetryLevel {
+	if (vscode.env.appName === 'Gitpod Code') {
+		return TelemetryLevel.ON;
+	}
+	
 	const TELEMETRY_CONFIG_ID = 'telemetry';
 	const TELEMETRY_CONFIG_ENABLED_ID = 'enableTelemetry';
 
@@ -63,15 +67,10 @@ export class BaseTelemetryAppender implements ITelemetryAppender {
 	private _exceptionQueue: Array<{ exception: Error; data: AppenderData | undefined }> = [];
 
 	// Necessary information to create a telemetry client
-	private _clientFactory: (key: string) => Promise<BaseTelemetryClient>;
-	private _key: string;
+	private _clientFactory: () => Promise<BaseTelemetryClient>;
 
-	constructor(key: string, clientFactory: (key: string) => Promise<BaseTelemetryClient>) {
+	constructor(clientFactory: () => Promise<BaseTelemetryClient>) {
 		this._clientFactory = clientFactory;
-		this._key = key;
-		if (getTelemetryLevel() !== TelemetryLevel.OFF) {
-			this.instantiateAppender();
-		}
 	}
 
 	/**
@@ -131,10 +130,11 @@ export class BaseTelemetryAppender implements ITelemetryAppender {
 		if (this._isInstantiated) {
 			return;
 		}
+		this._isInstantiated = true;
+
 		// Call the client factory to get the client and then let it know it's instatntiated
-		this._clientFactory(this._key).then(client => {
+		this._clientFactory().then(client => {
 			this._telemetryClient = client;
-			this._isInstantiated = true;
 			this._flushQueues();
 		}).catch(err => {
 			console.error(err);
