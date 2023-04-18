@@ -2,33 +2,33 @@
  *  Copyright (c) Gitpod. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
-import * as util from 'util';
-import * as grpc from '@grpc/grpc-js';
 import { GitpodClient, GitpodServer, GitpodServiceImpl, WorkspaceInstanceUpdateListener } from '@gitpod/gitpod-protocol/lib/gitpod-service';
-import { PortServiceClient } from '@gitpod/supervisor-api-grpc/lib/port_grpc_pb';
-import { StatusServiceClient } from '@gitpod/supervisor-api-grpc/lib/status_grpc_pb';
+import { User } from '@gitpod/gitpod-protocol/lib/protocol';
 import { Team } from '@gitpod/gitpod-protocol/lib/teams-projects-protocol';
-import { NotificationServiceClient } from '@gitpod/supervisor-api-grpc/lib/notification_grpc_pb';
-import { TerminalServiceClient } from '@gitpod/supervisor-api-grpc/lib/terminal_grpc_pb';
-import { TokenServiceClient } from '@gitpod/supervisor-api-grpc/lib/token_grpc_pb';
 import { PortVisibility } from '@gitpod/gitpod-protocol/lib/workspace-instance';
 import { ControlServiceClient } from '@gitpod/supervisor-api-grpc/lib/control_grpc_pb';
-import { InfoServiceClient } from '@gitpod/supervisor-api-grpc/lib/info_grpc_pb';
-import * as uuid from 'uuid';
-import { CloseTunnelRequest, RetryAutoExposeRequest, TunnelPortRequest, TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
-import { DebugWorkspaceType, WorkspaceInfoRequest, WorkspaceInfoResponse } from '@gitpod/supervisor-api-grpc/lib/info_pb';
-import { User } from '@gitpod/gitpod-protocol/lib/protocol';
-import ReconnectingWebSocket from 'reconnecting-websocket';
-import { ILogService } from './logService';
-import { GitpodYml } from './gitpodYaml';
-import * as path from 'path';
-import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';
-import { PortsStatusRequest, PortsStatusResponse, PortsStatus } from '@gitpod/supervisor-api-grpc/lib/status_pb';
-import { isGRPCErrorStatus } from './common/utils';
 import { ExposePortRequest } from '@gitpod/supervisor-api-grpc/lib/control_pb';
+import { InfoServiceClient } from '@gitpod/supervisor-api-grpc/lib/info_grpc_pb';
+import { DebugWorkspaceType, WorkspaceInfoRequest, WorkspaceInfoResponse } from '@gitpod/supervisor-api-grpc/lib/info_pb';
+import { NotificationServiceClient } from '@gitpod/supervisor-api-grpc/lib/notification_grpc_pb';
+import { PortServiceClient } from '@gitpod/supervisor-api-grpc/lib/port_grpc_pb';
+import { CloseTunnelRequest, RetryAutoExposeRequest, TunnelPortRequest, TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
+import { StatusServiceClient } from '@gitpod/supervisor-api-grpc/lib/status_grpc_pb';
+import { PortsStatus, PortsStatusRequest, PortsStatusResponse } from '@gitpod/supervisor-api-grpc/lib/status_pb';
+import { TerminalServiceClient } from '@gitpod/supervisor-api-grpc/lib/terminal_grpc_pb';
+import { TokenServiceClient } from '@gitpod/supervisor-api-grpc/lib/token_grpc_pb';
+import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';
+import * as grpc from '@grpc/grpc-js';
+import * as path from 'path';
+import ReconnectingWebSocket from 'reconnecting-websocket';
+import * as util from 'util';
+import * as uuid from 'uuid';
+import * as vscode from 'vscode';
+import { isGRPCErrorStatus } from './common/utils';
 import { ExperimentalSettings } from './experiments';
-import { TelemetryService } from './telemetryService';
+import { GitpodYml } from './gitpodYaml';
+import { ILogService } from './logService';
+import { TelemetryService, TelemetrySettings } from './telemetryService';
 
 // Important:
 // This class should performs all supervisor API calls used outside this module.
@@ -209,6 +209,7 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		readonly pendingWillCloseSocket: (() => Promise<void>)[],
 		readonly info: WorkspaceInfoResponse.AsObject,
 		readonly owner: Promise<User>,
+		readonly userId: Promise<string>,
 		readonly userTeams: Promise<Team[]>,
 		readonly instanceListener: Promise<WorkspaceInstanceUpdateListener>,
 		readonly workspaceOwned: Promise<boolean>,
@@ -224,7 +225,17 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 
 		const extensionId = context.extension.id;
 		const packageJSON = context.extension.packageJSON;
-		this.telemetryService = new TelemetryService(extensionId, packageJSON.version, packageJSON.segmentKey);
+		const telemetrySettigns: TelemetrySettings = {
+			writeKey: packageJSON.segmentKey,
+			// in dev mode we report to IDE lab source directly
+			host: 'https://api.segment.io',
+			path: '/v1/batch',
+		}
+		if (telemetrySettigns.writeKey === "untrusted-dummy-key") {
+			telemetrySettigns.host = info.gitpodHost;
+			telemetrySettigns.path = '/analytics' + telemetrySettigns.path;
+		}
+		this.telemetryService = new TelemetryService(extensionId, packageJSON.version, userId, telemetrySettigns, logger);
 	}
 
 	get active() {

@@ -123,6 +123,7 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 		pendingWillCloseSocket,
 		workspaceInfo,
 		pendingGetOwner,
+		pendingGetUserId,
 		pendingGetUserTeams,
 		pendingInstanceListener,
 		pendingWorkspaceOwned,
