@@ -39,7 +39,8 @@ jobs:
 
       - name: Build
         run: |
-          yarn run build:gitpod-web
+          yarn build:gitpod-web
+          yarn --cwd gitpod-web/ inject-commit-hash
 
       - name: Docker build and push
         uses: docker/build-push-action@v3

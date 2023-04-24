@@ -612,6 +612,7 @@
   },
   "scripts": {
     "vscode:prepublish": "yarn build:webview && webpack --mode production",
+    "inject-commit-hash": "echo 'Built from `'$(git rev-parse --short HEAD)'`' >> README.md",
     "webpack": "webpack --mode development",
     "compile": "tsc -b",
     "watch": "tsc -b -w",
