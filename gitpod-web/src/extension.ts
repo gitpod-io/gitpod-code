@@ -11,6 +11,7 @@ import { ReleaseNotes } from './releaseNotes';
 import { registerWelcomeWalkthroughContribution, WELCOME_WALKTROUGH_KEY } from './welcomeWalktrough';
 import { GitpodPortViewProvider } from './portViewProvider';
 import { registerExtensionManagement } from './extensionManagement';
+const meta = require('../package.json')
 
 let gitpodContext: GitpodExtensionContext | undefined;
 export async function activate(context: vscode.ExtensionContext) {
@@ -18,6 +19,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	if (!gitpodContext) {
 		return;
 	}
+
+	gitpodContext.logger.info(`Gitpod Web ${meta.commit || meta.version}`);
 
 	context.globalState.setKeysForSync([WELCOME_WALKTROUGH_KEY, ReleaseNotes.RELEASE_NOTES_LAST_READ_KEY]);
 
