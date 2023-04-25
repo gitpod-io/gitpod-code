@@ -123,21 +123,26 @@ export class BaseTelemetryAppender implements ITelemetryAppender {
 		this._exceptionQueue = [];
 	}
 
+	private isInstantiating = false;
+
 	/**
 	 * Instantiates the telemetry client to make the appender "active"
 	 */
 	instantiateAppender(): void {
-		if (this._isInstantiated) {
+		if (this.isInstantiating || this._isInstantiated) {
 			return;
 		}
-		this._isInstantiated = true;
+		this.isInstantiating = true;
 
 		// Call the client factory to get the client and then let it know it's instatntiated
 		this._clientFactory().then(client => {
 			this._telemetryClient = client;
+			this._isInstantiated = true;
 			this._flushQueues();
 		}).catch(err => {
 			console.error(err);
+		}).finally(() => {
+			this.isInstantiating = false;
 		});
 	}
 }
