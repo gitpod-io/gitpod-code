@@ -19,6 +19,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
+	gitpodContext.logger.info(`Gitpod Web ${context.extension.packageJSON.commit || context.extension.packageJSON.version}`);
+
 	context.globalState.setKeysForSync([WELCOME_WALKTROUGH_KEY, ReleaseNotes.RELEASE_NOTES_LAST_READ_KEY]);
 
 	registerCommands(gitpodContext);
