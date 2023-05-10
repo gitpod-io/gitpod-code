@@ -7,7 +7,6 @@ import { PortsStatus, PortVisibility } from '@gitpod/supervisor-api-grpc/lib/sta
 import type * as keytarType from 'keytar';
 import fetch from 'node-fetch';
 import * as vscode from 'vscode';
-import { ReleaseNotes } from './releaseNotes';
 import { registerWelcomeWalkthroughContribution, WELCOME_WALKTROUGH_KEY } from './welcomeWalktrough';
 import { GitpodPortViewProvider } from './portViewProvider';
 import { registerExtensionManagement } from './extensionManagement';
@@ -21,7 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	gitpodContext.logger.info(`Gitpod Web ${context.extension.packageJSON.commit || context.extension.packageJSON.version}`);
 
-	context.globalState.setKeysForSync([WELCOME_WALKTROUGH_KEY, ReleaseNotes.RELEASE_NOTES_LAST_READ_KEY]);
+	context.globalState.setKeysForSync([WELCOME_WALKTROUGH_KEY]);
 
 	registerCommands(gitpodContext);
 	registerDesktop();
@@ -39,7 +38,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerIpcHookCli(gitpodContext);
 	registerExtensionManagement(gitpodContext);
 	registerWelcomeWalkthroughContribution(gitpodContext);
-	context.subscriptions.push(new ReleaseNotes(context, gitpodContext.logger));
 
 	await gitpodContext.active;
 }
