@@ -84,11 +84,6 @@
         "enablement": "gitpod.inWorkspace == true"
       },
       {
-        "command": "gitpod.showReleaseNotes",
-        "title": "%showReleaseNotes%",
-        "enablement": "gitpod.inWorkspace == true"
-      },
-      {
         "command": "gitpod.upgradeSubscription",
         "title": "%upgradeSubscription%",
         "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
@@ -276,10 +271,6 @@
         {
           "command": "gitpod.reportIssue",
           "group": "z_about2@40"
-        },
-        {
-          "command": "gitpod.showReleaseNotes",
-          "group": "z_about2@50"
         }
       ],
       "extension/context": [
@@ -455,11 +446,6 @@
           "when": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true && gitpod.workspaceShared == true"
         },
         {
-          "command": "gitpod.showReleaseNotes",
-          "group": "remote_00_gitpod_navigation@140",
-          "when": "gitpod.inWorkspace == true"
-        },
-        {
           "command": "gitpod.openInStable",
           "group": "remote_00_gitpod_navigation@900",
           "when": "gitpod.inWorkspace == true && gitpod.UIKind == 'web'"
@@ -591,12 +577,6 @@
           "type": "boolean",
           "description": "Control whether to prompt to open in VS Code Desktop on page load.",
           "default": false
-        },
-        "gitpod.showReleaseNotes": {
-          "type": "boolean",
-          "description": "Show the Gitpod Changelog whenever a new one comes out.",
-          "default": true,
-          "scope": "application"
         }
       }
     },
