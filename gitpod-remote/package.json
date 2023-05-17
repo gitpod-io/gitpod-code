@@ -3,7 +3,7 @@
   "displayName": "%displayName%",
   "description": "%description%",
   "publisher": "gitpod",
-  "version": "0.0.44",
+  "version": "0.0.45",
   "license": "MIT",
   "preview": true,
   "icon": "resources/gitpod.png",
@@ -15,7 +15,7 @@
     "url": "https://github.com/gitpod-io/gitpod/issues"
   },
   "engines": {
-    "vscode": "^1.63.0"
+    "vscode": "^1.74.0"
   },
   "categories": [
     "Other"
