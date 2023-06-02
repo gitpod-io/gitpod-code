@@ -44,6 +44,7 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 	const workspaceId = workspaceInfo.workspaceId;
 	const gitpodHost = workspaceInfo.gitpodHost;
 	const gitpodApi = workspaceInfo.gitpodApi!;
+	const ownerId = workspaceInfo.ownerId;
 
 	const factory = new JsonRpcProxyFactory<GitpodServer>();
 	const gitpodService: GitpodConnection = new GitpodServiceImpl<GitpodClient, GitpodServer>(factory.createProxy()) as any;
@@ -55,19 +56,15 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 	for (const gitpodFunction of gitpodFunctions) {
 		gitpodScopes.add('function:' + gitpodFunction);
 	}
-	const pendingServerToken = (async () => {
-		const resp = await supervisor.getToken('gitpod', gitpodApi.host, [...gitpodScopes]);
-		return resp.token;
-	})();
 	const pendingWillCloseSocket: (() => Promise<void>)[] = [];
 	const pendingWebSocket = (async () => {
-		const serverToken = await pendingServerToken;
+		const tokenResp = await supervisor.getToken('gitpod', gitpodApi.host, [...gitpodScopes]);
 		class GitpodServerWebSocket extends WebSocket {
 			constructor(address: string, protocols?: string | string[]) {
 				super(address, protocols, {
 					headers: {
 						'Origin': new URL(gitpodHost).origin,
-						'Authorization': `Bearer ${serverToken}`,
+						'Authorization': `Bearer ${tokenResp.token}`,
 						'User-Agent': `${vscode.env.appName}/${vscode.version} ${context.extension.id}/${context.extension.packageJSON.version}`,
 					}
 				});
@@ -92,27 +89,20 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 		return webSocket;
 	})();
 
-	const pendingGetOwner = gitpodService.server.getLoggedInUser();
-	const pendingGetUserId = (async () => {
-		if (devMode || vscode.env.uiKind !== vscode.UIKind.Web) {
-			return (await pendingGetOwner).id;
-		}
-		return vscode.commands.executeCommand('gitpod.api.getLoggedInUser') as Promise<string>;
-	})();
-	const pendingGetUserTeams = gitpodService.server.getTeams();
-	const pendingInstanceListener = gitpodService.listenToInstance(workspaceId);
-	const pendingWorkspaceOwned = (async () => {
-		const owner = await pendingGetOwner;
-		const userId = await pendingGetUserId;
-		const workspaceOwned = owner.id === userId;
-		vscode.commands.executeCommand('setContext', 'gitpod.workspaceOwned', workspaceOwned);
-		return workspaceOwned;
-	})();
+	const userId = (devMode || vscode.env.uiKind !== vscode.UIKind.Web)
+		? ownerId
+		: await vscode.commands.executeCommand<string>('gitpod.api.getLoggedInUser'); // This returns a constant so should be fine to await it
+	const workspaceOwned = ownerId === userId;
+	vscode.commands.executeCommand('setContext', 'gitpod.workspaceOwned', workspaceOwned);
 
 	const ipcHookCli = installCLIProxy(context, logger);
 
+	const pendingGetOwner = gitpodService.server.getLoggedInUser();
+	const pendingGetUserTeams = gitpodService.server.getTeams();
 	const experiments = new ExperimentalSettings('gitpod', context, logger, gitpodHost, pendingGetOwner, pendingGetUserTeams);
 	context.subscriptions.push(experiments);
+
+	const pendingInstanceListener = gitpodService.listenToInstance(workspaceId);
 
 	return new GitpodExtensionContext(
 		context,
@@ -123,10 +113,10 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 		pendingWillCloseSocket,
 		workspaceInfo,
 		pendingGetOwner,
-		pendingGetUserId,
+		userId,
 		pendingGetUserTeams,
 		pendingInstanceListener,
-		pendingWorkspaceOwned,
+		workspaceOwned,
 		logger,
 		ipcHookCli,
 		experiments
@@ -199,7 +189,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 		return vscode.env.openExternal(vscode.Uri.parse(url));
 	}));
 
-	const workspaceOwned = await context.workspaceOwned;
+	const workspaceOwned = context.workspaceOwned;
 	if (!workspaceOwned) {
 		return;
 	}
@@ -267,7 +257,7 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 
 export async function registerWorkspaceSharing(context: GitpodExtensionContext): Promise<void> {
 	const owner = await context.owner;
-	const workspaceOwned = await context.workspaceOwned;
+	const workspaceOwned = context.workspaceOwned;
 	const workspaceSharingStatusBarItem = vscode.window.createStatusBarItem('gitpod.workspaceSharing', vscode.StatusBarAlignment.Left);
 	workspaceSharingStatusBarItem.name = 'Workspace Sharing';
 	context.subscriptions.push(workspaceSharingStatusBarItem);
@@ -350,7 +340,7 @@ export async function registerWorkspaceSharing(context: GitpodExtensionContext):
 }
 
 export async function registerWorkspaceTimeout(context: GitpodExtensionContext): Promise<void> {
-	const workspaceOwned = await context.workspaceOwned;
+	const workspaceOwned = context.workspaceOwned;
 	if (!workspaceOwned) {
 		return;
 	}
