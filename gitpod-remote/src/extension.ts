@@ -30,6 +30,9 @@ export async function activate(context: vscode.ExtensionContext) {
 		if (initial) {
 			initial = false;
 			promise.then(() => tunnelPorts(portList));
+		} else {
+			// Manually tunnel for now until fixing vscode bug where `remote.autoForwardPortsSource` is not respected on first connection
+			tunnelPorts(portList)
 		}
 		portViewProvider.updatePortsStatus(portList);
 	}));
