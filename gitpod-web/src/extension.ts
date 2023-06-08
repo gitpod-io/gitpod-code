@@ -323,7 +323,7 @@ async function registerPorts(context: GitpodExtensionContext): Promise<void> {
 		currentNotifications.delete(localPort);
 
 		if (result === makePublic) {
-			await gitpodContext?.setPortVisibility(port.status.localPort, 'public');
+			await gitpodContext?.controlPort(port.status.localPort, { visibility: 'public' });
 		} else if (result === openAction) {
 			await openPreview(port);
 		} else if (result === openExternalAction) {

@@ -33,14 +33,28 @@ export class GitpodPortViewProvider implements vscode.WebviewViewProvider {
 				...context.getWorkspaceTelemetryProperties(),
 				action: 'private'
 			});
-			context.setPortVisibility(port.status.localPort, 'private');
+			context.controlPort(port.status.localPort, { visibility: 'private' });
 		}));
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makePublic', ({ port }: PortItem) => {
 			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
 				...context.getWorkspaceTelemetryProperties(),
 				action: 'public'
 			});
-			context.setPortVisibility(port.status.localPort, 'public');
+			context.controlPort(port.status.localPort, { visibility: 'public' });
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makeHTTPS', ({ port }: PortItem) => {
+			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
+				...context.getWorkspaceTelemetryProperties(),
+				action: 'https'
+			});
+			context.controlPort(port.status.localPort, { protocol: 'https' });
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.makeHTTP', ({ port }: PortItem) => {
+			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {
+				...context.getWorkspaceTelemetryProperties(),
+				action: 'http'
+			});
+			context.controlPort(port.status.localPort, { protocol: 'http' });
 		}));
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.preview', ({ port }: PortItem) => {
 			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_ports', {

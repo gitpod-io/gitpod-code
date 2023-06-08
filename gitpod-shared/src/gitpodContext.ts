@@ -5,7 +5,7 @@
 import { GitpodClient, GitpodServer, GitpodServiceImpl, WorkspaceInstanceUpdateListener } from '@gitpod/gitpod-protocol/lib/gitpod-service';
 import { User } from '@gitpod/gitpod-protocol/lib/protocol';
 import { Team } from '@gitpod/gitpod-protocol/lib/teams-projects-protocol';
-import { PortVisibility } from '@gitpod/gitpod-protocol/lib/workspace-instance';
+import { WorkspaceInstancePort } from '@gitpod/gitpod-protocol/lib/workspace-instance';
 import { ControlServiceClient } from '@gitpod/supervisor-api-grpc/lib/control_grpc_pb';
 import { ExposePortRequest } from '@gitpod/supervisor-api-grpc/lib/control_pb';
 import { InfoServiceClient } from '@gitpod/supervisor-api-grpc/lib/info_grpc_pb';
@@ -311,10 +311,10 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		}
 	}
 
-	async setPortVisibility(port: number, visibility: PortVisibility): Promise<void> {
+	async controlPort(port: number, options: Partial<Pick<WorkspaceInstancePort, 'visibility' | 'protocol'>>): Promise<void> {
 		await this.gitpod.server.openPort(this.info.workspaceId, {
 			port,
-			visibility
+			...options,
 		});
 	}
 

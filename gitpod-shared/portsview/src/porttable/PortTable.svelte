@@ -14,6 +14,7 @@
 	import PortLocalAddress from "./PortLocalAddress.svelte";
 	import { vscode } from "../utils/vscodeApi";
 	import type { GitpodPortObject, PortCommand } from "../protocol/gitpod";
+	import { PortProtocol } from "../protocol/gitpod";
 	import { getNLSTitle, getSplitCommands } from "../utils/commands";
 	import type { MenuOption } from "../protocol/components";
 	import PortHoverActions from './PortHoverActions.svelte';
@@ -76,9 +77,9 @@
 	let innerWidth = 0
 
 	const responsiveMap: Record<number, {layout: string; headers: string[]; options?: { allInPort?: boolean; }}> = {
-		850: {
-			layout: "50px 180px 1fr 180px 180px",
-			headers: ["", "Port", "Address", "Description", "State"],
+		950: {
+			layout: "50px 180px 1fr 90px 180px 180px",
+			headers: ["", "Port", "Address", "Protocol", "Description", "State"],
 		},
 		700: {
 			layout: "50px 180px 1fr 180px",
@@ -92,7 +93,7 @@
 
 	const sortedResponsiveKeys = Object.keys(responsiveMap).map(e => Number(e)).sort((a, b) => b - a)
 
-	$: useResponsive = responsiveMap[sortedResponsiveKeys.find(e => innerWidth > e) ?? 850]
+	$: useResponsive = responsiveMap[sortedResponsiveKeys.find(e => innerWidth > e) ?? 950]
 
 	//#endregion
 
@@ -159,6 +160,12 @@
 								{port}
 							/>
 						{/if}
+					</vscode-data-grid-cell>
+				{/if}
+
+				{#if useResponsive.headers.includes("Protocol")}
+					<vscode-data-grid-cell grid-column={useResponsive.headers.indexOf("Protocol") + 1} class="td">
+						<span title="Forward Protocol">{port.status.exposed?.protocol === PortProtocol.HTTPS ? 'HTTPS' : 'HTTP'}</span>
 					</vscode-data-grid-cell>
 				{/if}
 

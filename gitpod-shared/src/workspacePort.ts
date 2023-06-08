@@ -2,7 +2,7 @@
  *  Copyright (c) Gitpod. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-import { PortsStatus, PortAutoExposure, PortVisibility, ExposedPortInfo } from '@gitpod/supervisor-api-grpc/lib/status_pb';
+import { PortsStatus, PortAutoExposure, PortVisibility, ExposedPortInfo, PortProtocol } from '@gitpod/supervisor-api-grpc/lib/status_pb';
 import { URL } from 'url';
 
 export interface ExposedPort extends PortsStatus.AsObject {
@@ -152,6 +152,9 @@ export class GitpodWorkspacePort {
 		}
 		if (!accessible && portStatus.autoExposure === PortAutoExposure.FAILED) {
 			port.contextValue = 'failed-' + port.contextValue;
+		}
+		if (exposed?.protocol && exposed.protocol === PortProtocol.HTTPS) {
+			port.contextValue = 'https-' + port.contextValue;
 		}
 		return port;
 	}

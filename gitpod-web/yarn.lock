@@ -132,10 +132,10 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-"@gitpod/gitpod-protocol@main":
-  version "0.1.5-main.6379"
-  resolved "https://registry.yarnpkg.com/@gitpod/gitpod-protocol/-/gitpod-protocol-0.1.5-main.6379.tgz#8c654e9d1658a62648ec4a1bc837f3d5756f8a14"
-  integrity sha512-QLScSNODhMle/w23HSr3RihIh7S+ZE46JRbOqbFgR9+a0FBoxPtHi6kqUmeNgqvt+hfyjgdPG5/yddU7j0uznA==
+"@gitpod/gitpod-protocol@0.1.5-main-gha.10852":
+  version "0.1.5-main-gha.10852"
+  resolved "https://registry.yarnpkg.com/@gitpod/gitpod-protocol/-/gitpod-protocol-0.1.5-main-gha.10852.tgz#4792be291ba7021e939aa1e78200b1bd228a2a54"
+  integrity sha512-n0Ga2Mzjdt/1Gze0SOWpk+xpG2/S1Yi0/hOmRtCFo3MUWA3cFvNQzdP5TByHKUMOxW3pKMZr4dBl9+LYrLvnzQ==
   dependencies:
     "@types/react" "17.0.32"
     abort-controller-x "^0.4.0"
@@ -150,6 +150,7 @@
     js-yaml "^3.10.0"
     nice-grpc-common "^2.0.0"
     opentracing "^0.14.5"
+    parse-duration "^1.0.3"
     prom-client "^13.2.0"
     random-number-csprng "^1.0.2"
     react "17.0.2"
@@ -164,10 +165,10 @@
     vscode-ws-jsonrpc "^0.2.0"
     ws "^7.4.6"
 
-"@gitpod/supervisor-api-grpc@ak-rebuild-debug":
-  version "0.1.5-ak-rebuild-debug.65"
-  resolved "https://registry.yarnpkg.com/@gitpod/supervisor-api-grpc/-/supervisor-api-grpc-0.1.5-ak-rebuild-debug.65.tgz#fe295c15a3b58d340d9111207c9eef1564bfff3c"
-  integrity sha512-tuR/kEalT4/02ZDuO9OgkVg54+Fw3ZIfaQHHyanEZq52tPgSW0/sezoPN0TAJxg+D8mbd1NsiDeQZx/0Xg7TGA==
+"@gitpod/supervisor-api-grpc@0.1.5-main-gha.10852":
+  version "0.1.5-main-gha.10852"
+  resolved "https://registry.yarnpkg.com/@gitpod/supervisor-api-grpc/-/supervisor-api-grpc-0.1.5-main-gha.10852.tgz#83755a5c0539fe9482a141351a7441057e7d352c"
+  integrity sha512-/OWTpEVZMYut0IbAH50sx6yVYeQB9TKZu+3kgkGiwT6LihgrH98BXteFT77yrlpKTHmAuvdoN3XJCGGPhfePRA==
   dependencies:
     "@grpc/grpc-js" "^1.3.7"
     google-protobuf "^3.19.1"
@@ -2555,6 +2556,11 @@ parent-module@^1.0.0:
   integrity sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==
   dependencies:
     callsites "^3.0.0"
+
+parse-duration@^1.0.3:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/parse-duration/-/parse-duration-1.1.0.tgz#5192084c5d8f2a3fd676d04a451dbd2e05a1819c"
+  integrity sha512-z6t9dvSJYaPoQq7quMzdEagSFtpGu+utzHqqxmpVWNNZRIXnvqyCvn9XsTdh7c/w0Bqmdz3RB3YnRaKtpRtEXQ==
 
 parseurl@~1.3.3:
   version "1.3.3"
