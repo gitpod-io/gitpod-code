@@ -8,5 +8,5 @@ By the time you start your next workspace, everything is installed, compiled and
 
 ## Documentation
 
-To learn more and how to enable prebuilds for your project, please [refer to the documentation](https://www.gitpod.io/docs/prebuilds).
+To learn more and how to enable prebuilds for your project, please [refer to the documentation](https://www.gitpod.io/docs/configure/projects/prebuilds).
 

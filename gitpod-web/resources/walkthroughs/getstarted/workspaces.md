@@ -22,4 +22,4 @@ Say you're working on a feature and a team member asks you to review their pull 
 
 ## Documentation
 
-To learn more about workspaces, please [refer to the documentation](https://www.gitpod.io/docs/workspaces).
+To learn more about workspaces, please [refer to the documentation](https://www.gitpod.io/docs/introduction/learn-gitpod/one-workspace-per-task).

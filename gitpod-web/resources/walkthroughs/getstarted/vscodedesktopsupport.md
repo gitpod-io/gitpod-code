@@ -8,4 +8,4 @@ Depending on the version of VS Code you have installed locally, use one of the f
 
 ## Documentation
 
-To learn more about VS Code desktop support, please [refer to the documentation](https://www.gitpod.io/docs/develop/vscode-desktop-support).
+To learn more about VS Code desktop support, please [refer to the documentation](https://www.gitpod.io/docs/references/ides-and-editors/vscode).
