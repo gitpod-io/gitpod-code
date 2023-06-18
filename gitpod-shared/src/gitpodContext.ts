@@ -5,7 +5,6 @@
 import { GitpodClient, GitpodServer, GitpodServiceImpl, WorkspaceInstanceUpdateListener } from '@gitpod/gitpod-protocol/lib/gitpod-service';
 import { User } from '@gitpod/gitpod-protocol/lib/protocol';
 import { Team } from '@gitpod/gitpod-protocol/lib/teams-projects-protocol';
-import { WorkspaceInstancePort } from '@gitpod/gitpod-protocol/lib/workspace-instance';
 import { ControlServiceClient } from '@gitpod/supervisor-api-grpc/lib/control_grpc_pb';
 import { ExposePortRequest } from '@gitpod/supervisor-api-grpc/lib/control_pb';
 import { InfoServiceClient } from '@gitpod/supervisor-api-grpc/lib/info_grpc_pb';
@@ -14,7 +13,7 @@ import { NotificationServiceClient } from '@gitpod/supervisor-api-grpc/lib/notif
 import { PortServiceClient } from '@gitpod/supervisor-api-grpc/lib/port_grpc_pb';
 import { CloseTunnelRequest, RetryAutoExposeRequest, TunnelPortRequest, TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
 import { StatusServiceClient } from '@gitpod/supervisor-api-grpc/lib/status_grpc_pb';
-import { PortsStatus, PortsStatusRequest, PortsStatusResponse } from '@gitpod/supervisor-api-grpc/lib/status_pb';
+import { ExposedPortInfo, PortProtocol, PortVisibility, PortsStatus, PortsStatusRequest, PortsStatusResponse } from '@gitpod/supervisor-api-grpc/lib/status_pb';
 import { TerminalServiceClient } from '@gitpod/supervisor-api-grpc/lib/terminal_grpc_pb';
 import { TokenServiceClient } from '@gitpod/supervisor-api-grpc/lib/token_grpc_pb';
 import { GetTokenRequest } from '@gitpod/supervisor-api-grpc/lib/token_pb';
@@ -311,10 +310,14 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		}
 	}
 
-	async controlPort(port: number, options: Partial<Pick<WorkspaceInstancePort, 'visibility' | 'protocol'>>): Promise<void> {
+	async controlPort(port: number, prevStatus: ExposedPortInfo.AsObject | undefined, updateOptions: Partial<Pick<ExposedPortInfo.AsObject, 'visibility' | 'protocol'>>): Promise<void> {
+		const protocol = updateOptions.protocol ?? prevStatus?.protocol ?? PortProtocol.HTTP;
+		const visibility = updateOptions.visibility ?? prevStatus?.visibility ?? PortVisibility.PRIVATE;
+
 		await this.gitpod.server.openPort(this.info.workspaceId, {
 			port,
-			...options,
+			protocol: protocol === PortProtocol.HTTPS ? 'https' : 'http',
+			visibility: visibility === PortVisibility.PUBLIC ? 'public' : 'private',
 		});
 	}
 
