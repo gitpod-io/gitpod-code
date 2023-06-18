@@ -3,9 +3,8 @@
  *--------------------------------------------------------------------------------------------*/
 import * as vscode from 'vscode';
 import { GitpodExtensionContext, ExposedServedGitpodWorkspacePort, GitpodWorkspacePort, isExposedServedGitpodWorkspacePort, isExposedServedPort, PortInfo, TunnelDescriptionI } from 'gitpod-shared';
-import { PortsStatus } from '@gitpod/supervisor-api-grpc/lib/status_pb';
+import { PortsStatus, PortProtocol, PortVisibility } from '@gitpod/supervisor-api-grpc/lib/status_pb';
 import { TunnelVisiblity } from '@gitpod/supervisor-api-grpc/lib/port_pb';
-import { PortProtocol, PortVisibility } from 'gitpod-shared/portsview/src/protocol/gitpod';
 
 const PortCommands = <const>['tunnelNetwork', 'tunnelHost', 'makePublic', 'makePrivate', 'preview', 'openBrowser', 'retryAutoExpose', 'urlCopy', 'queryPortData'];
 
