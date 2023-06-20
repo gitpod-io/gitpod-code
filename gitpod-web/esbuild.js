@@ -42,6 +42,7 @@ build().catch((e) => {
 });
 
 if (isWatch) {
+    const srcDir = path.join(__dirname, '../gitpod-shared/portsview')
     const watcher = require('@parcel/watcher');
     watcher.subscribe(srcDir, () => {
         return build();

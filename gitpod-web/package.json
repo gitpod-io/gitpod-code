@@ -149,6 +149,16 @@
         "icon": "$(lock)"
       },
       {
+        "command": "gitpod.ports.makeHTTPS",
+        "title": "%makeHTTPS%",
+        "icon": "$(workspace-untrusted)"
+      },
+      {
+        "command": "gitpod.ports.makeHTTP",
+        "title": "%makeHTTP%",
+        "icon": "$(workspace-trusted)"
+      },
+      {
         "command": "gitpod.ports.tunnelNetwork",
         "title": "%tunnelNetwork%",
         "icon": "$(eye)"
@@ -339,6 +349,14 @@
         },
         {
           "command": "gitpod.ports.makePrivate",
+          "when": "false"
+        },
+        {
+          "command": "gitpod.ports.makeHTTPS",
+          "when": "false"
+        },
+        {
+          "command": "gitpod.ports.makeHTTP",
           "when": "false"
         },
         {

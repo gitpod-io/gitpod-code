@@ -22,6 +22,8 @@ export const commandIconMap: Record<PortCommand, string> = {
 	tunnelHost: 'eye-closed',
 	makePublic: 'lock',
 	makePrivate: 'unlock',
+	makeHTTP: 'workspace-trusted',
+	makeHTTPS: 'workspace-untrusted',
 	preview: 'open-preview',
 	openBrowser: 'globe',
 	retryAutoExpose: 'refresh',
@@ -37,7 +39,7 @@ window.addEventListener('message', (event) => {
 });
 
 export function getCommands(port: GitpodPortObject): PortCommand[] {
-	return getSplitCommands(port).filter(e => !!e) as PortCommand[];
+	return getSplitCommands(port).filter(e => !!e && e !== 'makeHTTP' && e !== 'makeHTTPS') as PortCommand[];
 }
 
 export function getSplitCommands(port: GitpodPortObject) {
@@ -67,6 +69,14 @@ export function getSplitCommands(port: GitpodPortObject) {
 			opts.push(null);
 		}
 		opts.push('retryAutoExpose');
+	}
+	if (opts.length > 0) {
+		opts.push(null);
+	}
+	if (viewItem.includes('https')) {
+		opts.push('makeHTTP');
+	} else {
+		opts.push('makeHTTPS');
 	}
 	if (supportedCommands.length > 0) {
 		return opts.filter(e => e === null || supportedCommands.includes(e));

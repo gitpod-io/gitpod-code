@@ -25,6 +25,11 @@ export enum PortVisibility {
 	PUBLIC = 1,
 }
 
+export enum PortProtocol {
+    HTTP = 0,
+    HTTPS = 1,
+}
+
 export enum OnPortExposedAction {
 	IGNORE = 0,
 	OPEN_BROWSER = 1,
@@ -49,6 +54,7 @@ export enum TaskState {
 export namespace ExposedPortInfo {
 	export type AsObject = {
 		visibility: PortVisibility;
+		protocol: PortProtocol;
 		url: string;
 		onExposed: OnPortExposedAction;
 	};
@@ -81,6 +87,6 @@ export interface GitpodPortObject {
 	status: PortsStatus.AsObject & { remotePort?: number };
 }
 
-export const PortCommands = <const>['tunnelNetwork', 'tunnelHost', 'makePublic', 'makePrivate', 'preview', 'openBrowser', 'retryAutoExpose', 'urlCopy', 'queryPortData'];
+export const PortCommands = <const>['tunnelNetwork', 'tunnelHost', 'makePublic', 'makePrivate', 'preview', 'openBrowser', 'retryAutoExpose', 'urlCopy', 'queryPortData', 'makeHTTP', 'makeHTTPS'];
 
 export type PortCommand = typeof PortCommands[number];
