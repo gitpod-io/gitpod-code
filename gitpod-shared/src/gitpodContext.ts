@@ -27,7 +27,7 @@ import { isGRPCErrorStatus } from './common/utils';
 import { ExperimentalSettings } from './experiments';
 import { GitpodYml } from './gitpodYaml';
 import { ILogService } from './logService';
-import { TelemetryService, TelemetrySettings } from './telemetryService';
+import { TelemetryService } from './telemetryService';
 
 // Important:
 // This class should performs all supervisor API calls used outside this module.
@@ -208,10 +208,10 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		readonly pendingWillCloseSocket: (() => Promise<void>)[],
 		readonly info: WorkspaceInfoResponse.AsObject,
 		readonly owner: Promise<User>,
-		readonly userId: Promise<string>,
+		readonly userId: string,
 		readonly userTeams: Promise<Team[]>,
 		readonly instanceListener: Promise<WorkspaceInstanceUpdateListener>,
-		readonly workspaceOwned: Promise<boolean>,
+		readonly workspaceOwned: boolean,
 		readonly logger: ILogService,
 		readonly ipcHookCli: string | undefined,
 		readonly experiments: ExperimentalSettings
@@ -224,17 +224,12 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 
 		const extensionId = context.extension.id;
 		const packageJSON = context.extension.packageJSON;
-		const telemetrySettigns: TelemetrySettings = {
-			writeKey: packageJSON.segmentKey,
-			// in dev mode we report to IDE lab source directly
-			host: 'https://api.segment.io',
-			path: '/v1/batch',
+
+		const piiPaths = [context.extensionPath, context.globalStorageUri.fsPath];
+		if (context.storageUri) {
+			piiPaths.push(context.storageUri.fsPath);
 		}
-		if (telemetrySettigns.writeKey === "untrusted-dummy-key") {
-			telemetrySettigns.host = info.gitpodHost;
-			telemetrySettigns.path = '/analytics' + telemetrySettigns.path;
-		}
-		this.telemetryService = new TelemetryService(extensionId, packageJSON.version, userId, telemetrySettigns, logger);
+		this.telemetryService = new TelemetryService(extensionId, packageJSON.version, packageJSON.segmentKey, piiPaths, userId, this.info.gitpodHost, logger);
 	}
 
 	get active() {
