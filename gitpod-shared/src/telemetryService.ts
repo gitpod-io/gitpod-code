@@ -100,7 +100,7 @@ export class TelemetryService extends Disposable implements ITelemetryService {
 					delete properties['userId'];
 
 					const jsonData = {
-						component: 'vscode-browser-extension',
+						component: properties['common.extname'].split('.')[1], // gitpod-web or gitpod-remote 
 						errorStack: errorProps.stack || '',
 						version: properties['common.extversion'],
 						workspaceId,
