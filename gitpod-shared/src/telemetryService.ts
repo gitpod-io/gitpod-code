@@ -100,7 +100,7 @@ export class TelemetryService extends Disposable implements ITelemetryService {
 					delete properties['userId'];
 
 					const jsonData = {
-						component: 'vscode-desktop-extension',
+						component: 'vscode-browser-extension',
 						errorStack: errorProps.stack || '',
 						version: properties['common.extversion'],
 						workspaceId,
