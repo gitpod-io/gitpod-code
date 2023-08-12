@@ -80,15 +80,6 @@ function registerCLI(context: GitpodExtensionContext): void {
 }
 
 function registerCommands(context: GitpodExtensionContext) {
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.openInBrowser', () => {
-		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_change_vscode_type', {
-			...context.getWorkspaceTelemetryProperties(),
-			targetUiKind: 'web'
-		});
-		const url = context.info.workspaceUrl;
-		return vscode.env.openExternal(vscode.Uri.parse(url));
-	}));
-
 	// For collecting logs, will be called by gitpod-desktop extension;
 	context.subscriptions.push(vscode.commands.registerCommand('__gitpod.getGitpodRemoteLogsUri', () => {
 		return context.logUri;

@@ -40,11 +40,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "gitpod.stop.ws",
-        "title": "%stopWorkspace%",
-        "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
-      },
-      {
         "command": "gitpod.open.settings",
         "title": "%openSettings%",
         "enablement": "gitpod.inWorkspace == true"
@@ -52,11 +47,6 @@
       {
         "command": "gitpod.open.accessControl",
         "title": "%openAccessControl%",
-        "enablement": "gitpod.inWorkspace == true"
-      },
-      {
-        "command": "gitpod.open.context",
-        "title": "%openContext%",
         "enablement": "gitpod.inWorkspace == true"
       },
       {
@@ -113,11 +103,6 @@
         "command": "gitpod.stopSharingWorkspace",
         "title": "%stopSharingWorkspace%",
         "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true && gitpod.workspaceShared == true"
-      },
-      {
-        "command": "gitpod.openInBrowser",
-        "title": "%openInBrowser%",
-        "enablement": "gitpod.inWorkspace == true && gitpod.UIKind == 'desktop'"
       },
       {
         "command": "gitpod.ports.openBrowser",
@@ -193,11 +178,6 @@
     "menus": {
       "statusBar/remoteIndicator": [
         {
-          "command": "gitpod.stop.ws",
-          "group": "remote_00_gitpod_navigation@10",
-          "when": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
-        },
-        {
           "command": "gitpod.open.settings",
           "group": "remote_00_gitpod_navigation@20",
           "when": "gitpod.inWorkspace == true"
@@ -205,11 +185,6 @@
         {
           "command": "gitpod.open.accessControl",
           "group": "remote_00_gitpod_navigation@30",
-          "when": "gitpod.inWorkspace == true"
-        },
-        {
-          "command": "gitpod.open.context",
-          "group": "remote_00_gitpod_navigation@40",
           "when": "gitpod.inWorkspace == true"
         },
         {
@@ -261,11 +236,6 @@
           "command": "gitpod.stopSharingWorkspace",
           "group": "remote_00_gitpod_navigation@130",
           "when": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true && gitpod.workspaceShared == true"
-        },
-        {
-          "command": "gitpod.openInBrowser",
-          "group": "remote_00_gitpod_navigation@1000",
-          "when": "gitpod.inWorkspace == true && gitpod.UIKind == 'desktop'"
         }
       ],
       "editor/context": [

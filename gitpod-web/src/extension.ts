@@ -455,6 +455,24 @@ function registerCommands(context: GitpodExtensionContext) {
 		});
 		return openDesktop('vscode-insiders');
 	}));
+	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.context', () => {
+		const url = context.workspaceContextUrl.toString();
+		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
+			...context.getWorkspaceTelemetryProperties(),
+			url
+		});
+		return vscode.env.openExternal(vscode.Uri.parse(url));
+	}));
+
+	if (context.workspaceOwned) {
+		context.subscriptions.push(vscode.commands.registerCommand('gitpod.stop.ws', () => {
+			context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_workspace', {
+				...context.getWorkspaceTelemetryProperties(),
+				action: 'stop'
+			});
+			return context.gitpod.server.stopWorkspace(context.info.workspaceId);
+		}));
+	}
 }
 
 async function registerDesktop(): Promise<void> {

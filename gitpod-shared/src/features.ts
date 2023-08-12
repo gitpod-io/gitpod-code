@@ -148,14 +148,6 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 		});
 		return vscode.env.openExternal(vscode.Uri.parse(url));
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.context', () => {
-		const url = context.workspaceContextUrl.toString();
-		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
-			...context.getWorkspaceTelemetryProperties(),
-			url
-		});
-		return vscode.env.openExternal(vscode.Uri.parse(url));
-	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.open.documentation', () => {
 		const url = 'https://www.gitpod.io/docs';
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
@@ -193,13 +185,6 @@ export async function registerWorkspaceCommands(context: GitpodExtensionContext)
 	if (!workspaceOwned) {
 		return;
 	}
-	context.subscriptions.push(vscode.commands.registerCommand('gitpod.stop.ws', () => {
-		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_workspace', {
-			...context.getWorkspaceTelemetryProperties(),
-			action: 'stop'
-		});
-		return context.gitpod.server.stopWorkspace(context.info.workspaceId);
-	}));
 	context.subscriptions.push(vscode.commands.registerCommand('gitpod.upgradeSubscription', () => {
 		const url = new GitpodHostUrl(context.info.gitpodHost).asBilling().toString();
 		context.telemetryService.sendTelemetryEvent('vscode_execute_command_gitpod_open_link', {
