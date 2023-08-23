@@ -42,7 +42,7 @@ export class SupervisorConnection {
 		normal: 15 * 1000,
 		short: 5 * 1000
 	};
-	private readonly addr = process.env.SUPERVISOR_ADDR || 'localhost:22999';
+	private readonly addr = process.env.SUPERVISOR_ADDR || '127.0.0.1:22999';
 	private readonly clientOptions: Partial<grpc.ClientOptions>;
 	readonly metadata = new grpc.Metadata();
 	readonly status: StatusServiceClient;

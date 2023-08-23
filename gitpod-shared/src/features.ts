@@ -834,7 +834,7 @@ async function updateIpcHookCli(context: GitpodExtensionContext): Promise<void> 
 	try {
 		await new Promise<void>((resolve, reject) => {
 			const req = http.request({
-				hostname: 'localhost',
+				hostname: '127.0.0.1',
 				port: context.devMode ? 9888 /* From code-web.js */ : context.info.idePort,
 				protocol: 'http:',
 				path: `/cli/ipcHookCli/${encodeURIComponent(context.ipcHookCli!)}`,
