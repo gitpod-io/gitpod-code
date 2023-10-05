@@ -14,7 +14,7 @@
     "url": "https://github.com/gitpod-io/gitpod/issues"
   },
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.83.0"
   },
   "enabledApiProposals": [
     "resolvers",
@@ -624,7 +624,6 @@
     "@parcel/watcher": "^2.1.0",
     "@tsconfig/svelte": "^2.0.0",
     "@types/js-yaml": "^4.0.5",
-    "@types/keytar": "^4.4.2",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.5.12",
     "@types/uuid": "8.0.0",

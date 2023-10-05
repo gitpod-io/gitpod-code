@@ -3,16 +3,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import type * as keytarType from 'keytar';
 import fetch from 'node-fetch';
 import { Disposable, GitpodExtensionContext } from 'gitpod-shared';
 import Keychain from './util/keychain';
-
-type Keytar = {
-    getPassword: typeof keytarType['getPassword'];
-    setPassword: typeof keytarType['setPassword'];
-    deletePassword: typeof keytarType['deletePassword'];
-};
 
 interface SessionData {
     id: string;
@@ -65,15 +58,7 @@ export class GitpodAuthenticationProvider extends Disposable implements vscode.A
             this.context.logger.info('Reading sessions from keychain...');
             let storedSessions = await this._keychain.getToken();
             if (!storedSessions) {
-                // Fallback to old behavior
-                this.context.logger.warn('Falling back to deprecated keytar logic');
-
-                const keytar: Keytar = require('keytar');
-                storedSessions = await keytar.getPassword(`gitpod-code-gitpod.login`, 'account');
-                if (!storedSessions) {
-                    return []
-                }
-                await keytar.deletePassword(`gitpod-code-gitpod.login`, 'account');
+                return [];
             }
             this.context.logger.info('Got stored sessions!');
 

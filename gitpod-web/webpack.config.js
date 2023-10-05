@@ -20,7 +20,6 @@ const config = {
 		vscode: "commonjs vscode",
 		bufferutil: "bufferutil",
 		"utf-8-validate": "utf-8-validate",
-        "keytar": "commonjs keytar"
 	},
 	resolve: {
 		extensions: ['.ts', '.js']
