@@ -72,7 +72,7 @@ export class GitpodPortViewProvider implements vscode.WebviewViewProvider {
 				...context.getWorkspaceTelemetryProperties(),
 				action: 'openBrowser'
 			});
-			vscode.env.openExternal(vscode.Uri.parse(port.localUrl));
+			vscode.env.openExternal(vscode.Uri.parse(port.externalUrl));
 		}));
 		context.subscriptions.push(vscode.commands.registerCommand('gitpod.ports.tunnelNetwork', ({ port }: PortItem) => {
 			context.supervisor.setTunnelVisibility(port.portNumber, port.portNumber, TunnelVisiblity.NETWORK);
