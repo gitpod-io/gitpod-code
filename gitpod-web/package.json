@@ -69,26 +69,6 @@
         "enablement": "gitpod.inWorkspace == true"
       },
       {
-        "command": "gitpod.open.twitter",
-        "title": "%openTwitter%",
-        "enablement": "gitpod.inWorkspace == true"
-      },
-      {
-        "command": "gitpod.open.discord",
-        "title": "%openDiscord%",
-        "enablement": "gitpod.inWorkspace == true"
-      },
-      {
-        "command": "gitpod.reportIssue",
-        "title": "%reportIssue%",
-        "enablement": "gitpod.inWorkspace == true"
-      },
-      {
-        "command": "gitpod.upgradeSubscription",
-        "title": "%upgradeSubscription%",
-        "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
-      },
-      {
         "command": "gitpod.ExtendTimeout",
         "title": "%extendTimeout%",
         "enablement": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
@@ -259,28 +239,9 @@
           "group": "navigation@20"
         },
         {
-          "command": "gitpod.upgradeSubscription",
-          "group": "navigation@30",
-          "when": "gitpod.workspaceOwned == true"
-        },
-        {
           "command": "gitpod.ExtendTimeout",
           "group": "navigation@50",
           "when": "gitpod.workspaceOwned == true"
-        }
-      ],
-      "menuBar/help": [
-        {
-          "command": "gitpod.open.twitter",
-          "group": "z_about2@10"
-        },
-        {
-          "command": "gitpod.open.discord",
-          "group": "z_about2@20"
-        },
-        {
-          "command": "gitpod.reportIssue",
-          "group": "z_about2@40"
         }
       ],
       "extension/context": [
@@ -422,26 +383,6 @@
           "command": "gitpod.open.documentation",
           "group": "remote_00_gitpod_navigation@60",
           "when": "gitpod.inWorkspace == true"
-        },
-        {
-          "command": "gitpod.open.twitter",
-          "group": "remote_00_gitpod_navigation@70",
-          "when": "gitpod.inWorkspace == true"
-        },
-        {
-          "command": "gitpod.open.discord",
-          "group": "remote_00_gitpod_navigation@80",
-          "when": "gitpod.inWorkspace == true"
-        },
-        {
-          "command": "gitpod.reportIssue",
-          "group": "remote_00_gitpod_navigation@90",
-          "when": "gitpod.inWorkspace == true"
-        },
-        {
-          "command": "gitpod.upgradeSubscription",
-          "group": "remote_00_gitpod_navigation@100",
-          "when": "gitpod.inWorkspace == true && gitpod.workspaceOwned == true"
         },
         {
           "command": "gitpod.ExtendTimeout",
