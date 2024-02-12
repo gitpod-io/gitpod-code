@@ -5,13 +5,15 @@
 import * as vscode from 'vscode';
 import * as configcat from 'configcat-node';
 import * as configcatcommon from 'configcat-common';
-import { ILogService} from './logService';
+import { ILogService } from './logService';
 import { URL } from 'url';
 import { Team, User } from '@gitpod/gitpod-protocol';
 
 const experimentsSection = 'gitpod.experiments';
 
-export type EXPERIMENTAL_SETTINGS = 'gitpod.experiments.rebuildHints';
+export type EXPERIMENTAL_SETTINGS = |
+	'gitpod.experiments.rebuildHints' |
+	'dataops';
 
 export class ExperimentalSettings {
 	private configcatClient: configcatcommon.IConfigCatClient;

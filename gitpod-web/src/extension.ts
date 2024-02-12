@@ -41,6 +41,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerExtensionManagement(gitpodContext);
 	registerWelcomeWalkthroughContribution(gitpodContext);
 
+	gitpodContext.experiments.get('dataops', false)
+		.then(dataops => vscode.commands.executeCommand('setContext', 'gitpod.dataops', !!dataops));
+
 	await gitpodContext.active;
 }
 

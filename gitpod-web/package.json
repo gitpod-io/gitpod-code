@@ -3,7 +3,7 @@
   "displayName": "%displayName%",
   "description": "%description%",
   "publisher": "gitpod",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "icon": "resources/gitpod.png",
   "repository": {
@@ -198,7 +198,8 @@
         },
         {
           "command": "gitpod.open.documentation",
-          "group": "gitpod@30"
+          "group": "gitpod@30",
+          "when": "gitpod.dataops !== true"
         },
         {
           "command": "gitpod.takeSnapshot",
@@ -351,6 +352,10 @@
         {
           "command": "gitpod.gitpodyml.dockerfile.editorTitle.run",
           "when": "false"
+        },
+        {
+          "command": "gitpod.open.documentation",
+          "when": "gitpod.dataops !== true"
         }
       ],
       "statusBar/remoteIndicator": [
@@ -382,7 +387,7 @@
         {
           "command": "gitpod.open.documentation",
           "group": "remote_00_gitpod_navigation@60",
-          "when": "gitpod.inWorkspace == true"
+          "when": "gitpod.inWorkspace == true && gitpod.dataops !== true"
         },
         {
           "command": "gitpod.ExtendTimeout",
