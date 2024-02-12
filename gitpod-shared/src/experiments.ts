@@ -17,6 +17,7 @@ export type EXPERIMENTAL_SETTINGS = |
 
 export class ExperimentalSettings {
 	private configcatClient: configcatcommon.IConfigCatClient;
+	private gitpodHostUrl: URL | undefined;
 
 	constructor(
 		key: string,
@@ -26,6 +27,10 @@ export class ExperimentalSettings {
 		private readonly pendingOwner: Promise<User>,
 		private readonly pendingTeams: Promise<Team[]>,
 	) {
+		try {
+			this.gitpodHostUrl = new URL(gitpodHost);
+		} catch {
+		}
 		this.configcatClient = configcat.createClientWithLazyLoad(key, {
 			baseUrl: new URL('/configcat', context.extensionMode === vscode.ExtensionMode.Production ? gitpodHost : 'https://gitpod-staging.com').href,
 			logger: {
@@ -80,6 +85,9 @@ export class ExperimentalSettings {
 		}
 		if (teamId) {
 			attributes["team_id"] = teamId;
+		}
+		if (this.gitpodHostUrl) {
+			attributes["gitpod_host"] = this.gitpodHostUrl.host;
 		}
 		return new configcatcommon.User(userId, email, undefined, attributes);
 	}
