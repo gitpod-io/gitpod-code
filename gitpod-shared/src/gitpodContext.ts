@@ -4,7 +4,6 @@
 
 import { GitpodClient, GitpodServer, GitpodServiceImpl, WorkspaceInstanceUpdateListener } from '@gitpod/gitpod-protocol/lib/gitpod-service';
 import { User } from '@gitpod/gitpod-protocol/lib/protocol';
-import { Team } from '@gitpod/gitpod-protocol/lib/teams-projects-protocol';
 import { ControlServiceClient } from '@gitpod/supervisor-api-grpc/lib/control_grpc_pb';
 import { ExposePortRequest } from '@gitpod/supervisor-api-grpc/lib/control_pb';
 import { InfoServiceClient } from '@gitpod/supervisor-api-grpc/lib/info_grpc_pb';
@@ -209,7 +208,6 @@ export class GitpodExtensionContext implements vscode.ExtensionContext {
 		readonly info: WorkspaceInfoResponse.AsObject,
 		readonly owner: Promise<User>,
 		readonly userId: string,
-		readonly userTeams: Promise<Team[]>,
 		readonly instanceListener: Promise<WorkspaceInstanceUpdateListener>,
 		readonly workspaceOwned: boolean,
 		readonly logger: ILogService,

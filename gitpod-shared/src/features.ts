@@ -24,6 +24,7 @@ import { ILogService } from './logService';
 import { isGRPCErrorStatus } from './common/utils';
 import { GitpodConnection, GitpodExtensionContext, SupervisorConnection } from './gitpodContext';
 import { ExperimentalSettings } from './experiments';
+import { Team } from '@gitpod/gitpod-protocol';
 
 export async function createGitpodExtensionContext(context: vscode.ExtensionContext): Promise<GitpodExtensionContext | undefined> {
 	const logger = vscode.window.createOutputChannel('Gitpod Workspace', { log: true });
@@ -98,7 +99,10 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 	const ipcHookCli = installCLIProxy(context, logger);
 
 	const pendingGetOwner = gitpodService.server.getLoggedInUser();
-	const pendingGetUserTeams = gitpodService.server.getTeams();
+	const pendingGetUserTeams = gitpodService.server.getTeams().catch(() => {
+		// Collaborator role doesn't have permission
+		return [] as Team[];
+	});
 	const experiments = new ExperimentalSettings('gitpod', context, logger, gitpodHost, pendingGetOwner, pendingGetUserTeams);
 	context.subscriptions.push(experiments);
 
@@ -114,7 +118,6 @@ export async function createGitpodExtensionContext(context: vscode.ExtensionCont
 		workspaceInfo,
 		pendingGetOwner,
 		userId,
-		pendingGetUserTeams,
 		pendingInstanceListener,
 		workspaceOwned,
 		logger,
