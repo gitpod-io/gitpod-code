@@ -629,15 +629,7 @@ export async function registerTasks(context: GitpodExtensionContext): Promise<vo
 		const taskTerminal = taskTerminals.get(alias);
 		if (taskTerminal) {
 			const openMode: TerminalOpenMode | undefined = taskStatus.getPresentation()?.getOpenMode() as TerminalOpenMode;
-			const parentTerminal = (openMode && openMode !== 'tab-before' && openMode !== 'tab-after') ? prevTerminal : undefined;
-			const pty = createTaskPty(alias, context, token);
-
-			const terminal = vscode.window.createTerminal({
-				name: taskTerminal.getTitle(),
-				pty,
-				iconPath: new vscode.ThemeIcon('terminal'),
-				location: parentTerminal ? { parentTerminal } : vscode.TerminalLocation.Panel
-			});
+			const terminal = createTaskTerminal(taskTerminal, prevTerminal, openMode, alias, context, token);
 			prevTerminal = terminal;
 		}
 	}
@@ -645,7 +637,7 @@ export async function registerTasks(context: GitpodExtensionContext): Promise<vo
 	prevTerminal?.show();
 }
 
-function createTaskPty(alias: string, context: GitpodExtensionContext, contextToken: vscode.CancellationToken): vscode.Pseudoterminal {
+function createTaskTerminal(taskTerminal: SupervisorTerminal, prevTerminal: vscode.Terminal | undefined, openMode: TerminalOpenMode, alias: string, context: GitpodExtensionContext, contextToken: vscode.CancellationToken): vscode.Terminal {
 	const tokenSource = new vscode.CancellationTokenSource();
 	contextToken.onCancellationRequested(() => tokenSource.cancel());
 	const token = tokenSource.token;
@@ -656,6 +648,7 @@ function createTaskPty(alias: string, context: GitpodExtensionContext, contextTo
 	const toDispose = vscode.Disposable.from(onDidWriteEmitter, onDidCloseEmitter, onDidChangeNameEmitter);
 	token.onCancellationRequested(() => toDispose.dispose());
 
+	let terminal: vscode.Terminal
 	let pendingWrite = Promise.resolve();
 	let pendingResize = Promise.resolve();
 	const pty: vscode.Pseudoterminal = {
@@ -732,11 +725,13 @@ function createTaskPty(alias: string, context: GitpodExtensionContext, contextTo
 				return;
 			}
 			tokenSource.cancel();
-
-			// await to make sure that close is not cause by the extension host process termination
-			// in such case we don't want to stop supervisor terminals
+			// wait next tick to ensure terminal has exitStatus
 			setTimeout(async () => {
 				if (contextToken.isCancellationRequested) {
+					return;
+				}
+				// we don't close tasks if terminal is closed by window reload
+				if (terminal.exitStatus?.reason === vscode.TerminalExitReason.Shutdown) {
 					return;
 				}
 				// Attempt to kill the pty, it may have already been killed at this
@@ -756,8 +751,7 @@ function createTaskPty(alias: string, context: GitpodExtensionContext, contextTo
 						console.error(`${alias} terminal: shutdown failed:`, e);
 					}
 				}
-			}, 1000);
-
+			}, 0)
 		},
 		handleInput: async (data: string) => {
 			if (token.isCancellationRequested) {
@@ -811,8 +805,16 @@ function createTaskPty(alias: string, context: GitpodExtensionContext, contextTo
 			});
 		}
 	};
+	const parentTerminal = (openMode && openMode !== 'tab-before' && openMode !== 'tab-after') ? prevTerminal : undefined;
 
-	return pty;
+	terminal = vscode.window.createTerminal({
+		name: taskTerminal.getTitle(),
+		pty,
+		iconPath: new vscode.ThemeIcon('terminal'),
+		location: parentTerminal ? { parentTerminal } : vscode.TerminalLocation.Panel
+	});
+
+	return terminal;
 }
 
 /**
