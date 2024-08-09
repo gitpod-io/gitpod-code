@@ -43,9 +43,11 @@ export async function initializeRemoteExtensions(extensions: ISyncExtension[], c
 	const codeCliPath = path.join(vscode.env.appRoot, 'bin/remote-cli', appName);
 	const args = extensions.map(e => '--install-extension ' + e.identifier.id).join(' ');
 
+	const execEnv = { ...process.env };
+	delete execEnv['ELECTRON_RUN_AS_NODE']
 	try {
-		context.logger.trace('Trying to initialize remote extensions:', extensions.map(e => e.identifier.id).join('\n'));
-		const { stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`);
+		context.logger.info('Trying to initialize remote extensions:', extensions.map(e => e.identifier.id).join('\n'));
+		const { stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
 		if (stderr) {
 			context.logger.error('Failed to initialize remote extensions:', stderr);
 		}
@@ -104,9 +106,11 @@ export async function installInitialExtensions(context: GitpodExtensionContext) 
 	const codeCliPath = path.join(vscode.env.appRoot, 'bin/remote-cli', appName);
 	const args = extensions.map(e => '--install-extension ' + e.toString()).join(' ');
 
+	const execEnv = { ...process.env };
+	delete execEnv['ELECTRON_RUN_AS_NODE']
 	try {
-		context.logger.trace('Trying to initialize remote extensions from gitpod.yml:', extensions.map(e => e.toString()).join('\n'));
-		const { stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`);
+		context.logger.info('Trying to initialize remote extensions from gitpod.yml:', extensions.map(e => e.toString()).join('\n'));
+		const { stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
 		if (stderr) {
 			context.logger.error('Failed to initialize remote extensions from gitpod.yml:', stderr);
 		}
