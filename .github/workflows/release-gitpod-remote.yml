@@ -45,6 +45,7 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
       - name: Publish to Open VSX Registry
+        working-directory: ./gitpod-remote
         run: |
           npx ovsx publish --packagePath ${{ steps.package_vsix.outputs.vsix_path }}
         env:
