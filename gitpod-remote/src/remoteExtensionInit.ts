@@ -47,10 +47,8 @@ export async function initializeRemoteExtensions(extensions: ISyncExtension[], c
 	delete execEnv['ELECTRON_RUN_AS_NODE']
 	try {
 		context.logger.info('Trying to initialize remote extensions:', extensions.map(e => e.identifier.id).join('\n'));
-		const { stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
-		if (stderr) {
-			context.logger.error('Failed to initialize remote extensions:', stderr);
-		}
+		const { stdout, stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
+		context.logger.info(`Initialize remote extensions cli commamnd output:\nstdout: ${stdout}\nstderr: ${stderr}`);
 	} catch (e) {
 		context.logger.error('Error trying to initialize remote extensions:', e);
 	}
@@ -110,10 +108,8 @@ export async function installInitialExtensions(context: GitpodExtensionContext) 
 	delete execEnv['ELECTRON_RUN_AS_NODE']
 	try {
 		context.logger.info('Trying to initialize remote extensions from gitpod.yml:', extensions.map(e => e.toString()).join('\n'));
-		const { stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
-		if (stderr) {
-			context.logger.error('Failed to initialize remote extensions from gitpod.yml:', stderr);
-		}
+		const { stdout, stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
+		context.logger.info(`Initialize remote extensions cli commamnd output:\nstdout: ${stdout}\nstderr: ${stderr}`);
 	} catch (e) {
 		context.logger.error('Error trying to initialize remote extensions from gitpod.yml:', e);
 	}
