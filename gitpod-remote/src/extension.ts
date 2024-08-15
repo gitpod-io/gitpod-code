@@ -10,6 +10,7 @@ import { tunnelPorts } from './ports';
 import { GitpodPortViewProvider } from './portViewProvider';
 import { initializeRemoteExtensions, installInitialExtensions, ISyncExtension } from './remoteExtensionInit';
 
+let initialExtensionsInstallPromise: Promise<void>;
 let gitpodContext: GitpodExtensionContext | undefined;
 export async function activate(context: vscode.ExtensionContext) {
 	gitpodContext = await setupGitpodContext(context);
@@ -19,7 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	registerCommands(gitpodContext);
 	registerTasks(gitpodContext);
-	installInitialExtensions(gitpodContext);
+	initialExtensionsInstallPromise = installInitialExtensions(gitpodContext);
 
 	const portViewProvider = new GitpodPortViewProvider(gitpodContext);
 	context.subscriptions.push(vscode.window.registerWebviewViewProvider(GitpodPortViewProvider.viewType, portViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
@@ -86,5 +87,12 @@ function registerCommands(context: GitpodExtensionContext) {
 	}));
 
 	// Initialize remote extensions
-	context.subscriptions.push(vscode.commands.registerCommand('__gitpod.initializeRemoteExtensions', (extensions: ISyncExtension[]) => initializeRemoteExtensions(extensions, gitpodContext!)));
+	context.subscriptions.push(vscode.commands.registerCommand('__gitpod.initializeRemoteExtensions', async (extensions: ISyncExtension[]) => {
+		try {
+			// Await for initial extension instalation so we don't have too many extension installations tasks running
+			await initialExtensionsInstallPromise;
+		} catch {
+		}
+		return initializeRemoteExtensions(extensions, gitpodContext!);
+	}));
 }
