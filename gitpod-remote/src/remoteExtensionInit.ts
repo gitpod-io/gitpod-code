@@ -9,6 +9,8 @@ import { GitpodExtensionContext } from 'gitpod-shared';
 import * as util from 'util';
 import * as path from 'path';
 
+const MAX_EXTENSIONS = 15;
+
 export interface IExtensionIdentifier {
 	id: string;
 	uuid?: string;
@@ -41,16 +43,23 @@ export async function initializeRemoteExtensions(extensions: ISyncExtension[], c
 	const productJson = await getVSCodeProductJson();
 	const appName = productJson.applicationName || 'code';
 	const codeCliPath = path.join(vscode.env.appRoot, 'bin/remote-cli', appName);
-	const args = extensions.map(e => '--install-extension ' + e.identifier.id).join(' ');
-
 	const execEnv = { ...process.env };
-	delete execEnv['ELECTRON_RUN_AS_NODE']
-	try {
-		context.logger.info('Trying to initialize remote extensions:', extensions.map(e => e.identifier.id).join('\n'));
-		const { stdout, stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
-		context.logger.info(`Initialize remote extensions cli commamnd output:\nstdout: ${stdout}\nstderr: ${stderr}`);
-	} catch (e) {
-		context.logger.error('Error trying to initialize remote extensions:', e);
+	delete execEnv['ELECTRON_RUN_AS_NODE'];
+
+	context.logger.info('Trying to initialize remote extensions:', extensions.map(e => e.identifier.id).join('\n'));
+	for (let i = 0; i < extensions.length; i+= MAX_EXTENSIONS) {
+		const extensionsChunk = extensions.slice(i, i + MAX_EXTENSIONS);
+		if (!extensionsChunk.length) {
+			break;
+		}
+
+		try {
+			const args = extensionsChunk.map(e => '--install-extension ' + e.identifier.id).join(' ');
+			const { stdout, stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
+			context.logger.info(`Initialize remote extensions cli commamnd output:\nstdout: ${stdout}\nstderr: ${stderr}`);
+		} catch (e) {
+			context.logger.error('Error trying to initialize remote extensions:', e);
+		}
 	}
 
 	return true;
@@ -102,15 +111,22 @@ export async function installInitialExtensions(context: GitpodExtensionContext) 
 	const productJson = await getVSCodeProductJson();
 	const appName = productJson.applicationName || 'code';
 	const codeCliPath = path.join(vscode.env.appRoot, 'bin/remote-cli', appName);
-	const args = extensions.map(e => '--install-extension ' + e.toString()).join(' ');
-
 	const execEnv = { ...process.env };
-	delete execEnv['ELECTRON_RUN_AS_NODE']
-	try {
-		context.logger.info('Trying to initialize remote extensions from gitpod.yml:', extensions.map(e => e.toString()).join('\n'));
-		const { stdout, stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
-		context.logger.info(`Initialize remote extensions cli commamnd output:\nstdout: ${stdout}\nstderr: ${stderr}`);
-	} catch (e) {
-		context.logger.error('Error trying to initialize remote extensions from gitpod.yml:', e);
+	delete execEnv['ELECTRON_RUN_AS_NODE'];
+
+	context.logger.info('Trying to initialize remote extensions from gitpod.yml:', extensions.map(e => e.toString()).join('\n'));
+	for (let i = 0; i < extensions.length; i+= MAX_EXTENSIONS) {
+		const extensionsChunk = extensions.slice(i, i + MAX_EXTENSIONS);
+		if (!extensionsChunk.length) {
+			break;
+		}
+
+		try {
+			const args = extensionsChunk.map(e => '--install-extension ' + e.toString()).join(' ');
+			const { stdout, stderr } = await util.promisify(cp.exec)(`${codeCliPath} ${args}`, { env: execEnv });
+			context.logger.info(`Initialize remote extensions cli commamnd output:\nstdout: ${stdout}\nstderr: ${stderr}`);
+		} catch (e) {
+			context.logger.error('Error trying to initialize remote extensions from gitpod.yml:', e);
+		}
 	}
 }
