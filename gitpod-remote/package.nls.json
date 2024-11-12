@@ -1,6 +1,6 @@
 {
 	"displayName": "Gitpod Remote",
-	"description": "Gitpod Remote Support",
+	"description": "Auto-installed within Classic workspaces, required to provision extensions, task terminals, etc.",
 	"openDashboard": "Gitpod: Open Dashboard",
 	"openAccessControl": "Gitpod: Open Access Control",
 	"openSettings": "Gitpod: Open Settings",
