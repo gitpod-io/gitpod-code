@@ -322,7 +322,7 @@
       ]
     },
     "configuration": {
-      "title": "Gitpod",
+      "title": "Gitpod Classic",
       "properties": {
         "gitpod.validate.neverPrompt": {
           "type": "boolean",
