@@ -3,7 +3,7 @@
   "displayName": "%displayName%",
   "description": "%description%",
   "publisher": "gitpod",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "license": "MIT",
   "icon": "resources/gitpod.png",
   "repository": {
@@ -530,7 +530,7 @@
       }
     ],
     "configuration": {
-      "title": "Gitpod",
+      "title": "Gitpod Classic",
       "properties": {
         "gitpod.validate.neverPrompt": {
           "type": "boolean",
