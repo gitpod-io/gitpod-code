@@ -1,0 +1,15 @@
+{
+  "name": "Development",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "postCreateCommand": "yarn install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "svelte.svelte-vscode"
+      ]
+    }
+  }
+}
