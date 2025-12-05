@@ -15,7 +15,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile
+          yarn install --frozen-lockfile --ignore-scripts
 
       - name: Update Segment
         working-directory: ./gitpod-remote
@@ -40,13 +40,13 @@ jobs:
       - name: Publish to MS Marketplace
         working-directory: ./gitpod-remote
         run: |
-          npx vsce publish --packagePath ${{ steps.package_vsix.outputs.vsix_path }}
+          yarn vsce publish --packagePath ${{ steps.package_vsix.outputs.vsix_path }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
       - name: Publish to Open VSX Registry
         working-directory: ./gitpod-remote
         run: |
-          npx ovsx publish --packagePath ${{ steps.package_vsix.outputs.vsix_path }}
+          yarn ovsx publish --packagePath ${{ steps.package_vsix.outputs.vsix_path }}
         env:
           OVSX_PAT: ${{ secrets.OPEN_VSX_PAT }}

@@ -1,7 +1,7 @@
 image: gitpod/workspace-node
 tasks:
   - init: |
-      yarn install
+      yarn install --ignore-scripts
     name: Compile gitpod-shared
     command: |
       cd gitpod-shared

@@ -26,7 +26,7 @@ jobs:
 
       - name: Execute yarn
         run: |
-          yarn --frozen-lockfile
+          yarn --frozen-lockfile --ignore-scripts
 
       - name: Update Segment
         working-directory: ./gitpod-web

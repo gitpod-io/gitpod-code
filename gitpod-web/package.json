@@ -563,10 +563,12 @@
     "build:webview": "node esbuild.js",
     "watch:webview": "node esbuild.js --watch",
     "start:webview": "sirv public --no-clear",
-    "update-dts": "cd \"src/@types\" && npx vscode-dts dev",
-    "package": "npx vsce package --yarn --allow-star-activation"
+    "update-dts": "cd \"src/@types\" && yarn vscode-dts dev",
+    "package": "yarn vsce package --yarn --allow-star-activation"
   },
   "devDependencies": {
+    "@vscode/vsce": "^2.22.0",
+    "vscode-dts": "^0.3.3",
     "@parcel/watcher": "^2.1.0",
     "@tsconfig/svelte": "^2.0.0",
     "@types/js-yaml": "^4.0.5",
